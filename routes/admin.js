@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Advertisement = require('../models/Advertisement');
 const authMiddleware = require('../middleware/auth');
-const { uploadFields } = require('../middleware/upload');
+const upload = require('../middleware/upload');
 const { body, validationResult } = require('express-validator');
 
 router.get('/advertisements', async (req, res) => {
@@ -25,7 +25,10 @@ router.get('/advertisements', async (req, res) => {
   }
 });
 
-router.post('/advertisements', uploadFields, [
+router.post('/advertisements', upload.fields([
+  { name: 'images', maxCount: 10 },
+  { name: 'videos', maxCount: 5 }
+]), [
   body('nameAr').trim().notEmpty().withMessage('Arabic name is required'),
   body('nameEn').trim().notEmpty().withMessage('English name is required'),
   body('descriptionAr').trim().notEmpty().withMessage('Arabic description is required'),
@@ -48,8 +51,8 @@ router.post('/advertisements', uploadFields, [
       });
     }
 
-    const images = req.files.images.map(file => `/uploads/${file.filename}`);
-    const videos = req.files.videos ? req.files.videos.map(file => `/uploads/${file.filename}`) : [];
+    const images = req.files.images.map(file => file.path);
+    const videos = req.files.videos ? req.files.videos.map(file => file.path) : [];
 
     const socialMedia = {
       twitter: req.body.twitter || '',
@@ -95,10 +98,12 @@ router.post('/advertisements', uploadFields, [
   }
 });
 
-router.patch('/advertisements/:id', uploadFields, async (req, res) => {
+router.put('/advertisements/:id', upload.fields([
+  { name: 'images', maxCount: 10 },
+  { name: 'videos', maxCount: 5 }
+]), async (req, res) => {
   try {
     let advertisement = await Advertisement.findById(req.params.id);
-    
     if (!advertisement) {
       return res.status(404).json({ 
         success: false,
@@ -108,10 +113,11 @@ router.patch('/advertisements/:id', uploadFields, async (req, res) => {
 
     const updateData = {};
 
-    ['nameAr', 'nameEn', 'descriptionAr', 'descriptionEn', 'category', 'subCategory', 'governorate', 'displayOrder', 'isActive'].forEach(field => {
-        if (req.body[field] !== undefined) {
-            updateData[field] = req.body[field];
-        }
+    const fields = ['nameAr', 'nameEn', 'descriptionAr', 'descriptionEn', 'category', 'subCategory', 'governorate', 'displayOrder'];
+    fields.forEach(field => {
+      if (req.body[field] !== undefined) {
+        updateData[field] = req.body[field];
+      }
     });
 
     if (req.body.subscriptionEndDate) {
@@ -125,7 +131,7 @@ router.patch('/advertisements/:id', uploadFields, async (req, res) => {
 
     let newImages = [];
     if (req.files && req.files.images && req.files.images.length > 0) {
-      newImages = req.files.images.map(file => `/uploads/${file.filename}`);
+      newImages = req.files.images.map(file => file.path);
     }
     updateData.images = [...existingImages, ...newImages];
     
@@ -136,7 +142,7 @@ router.patch('/advertisements/:id', uploadFields, async (req, res) => {
 
     let newVideos = [];
     if (req.files && req.files.videos && req.files.videos.length > 0) {
-      newVideos = req.files.videos.map(file => `/uploads/${file.filename}`);
+      newVideos = req.files.videos.map(file => file.path);
     }
     updateData.videos = [...existingVideos, ...newVideos];
 
