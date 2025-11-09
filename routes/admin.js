@@ -12,12 +12,13 @@ router.get('/advertisements', async (req, res) => {
     res.json({
       success: true,
       count: advertisements.length,
-      data: advertisements
+      data: advertisements.map(ad => ad.toObject())
     });
   } catch (error) {
+    console.error(error);
     res.status(500).json({ 
       success: false, 
-      message: error.message 
+      message: 'Server error' 
     });
   }
 });
@@ -48,44 +49,44 @@ router.post('/advertisements', upload.fields([
       });
     }
 
-    const images = req.files.images.map(file => file.path);
-    const videos = req.files.videos ? req.files.videos.map(file => file.path) : [];
-
-    const socialMedia = {
-      twitter: req.body.twitter || '',
-      instagram: req.body.instagram || '',
-      facebook: req.body.facebook || '',
-      snapchat: req.body.snapchat || '',
-      whatsapp: req.body.whatsapp || '',
-      phone: req.body.phone || '',
-      website: req.body.website || '',
-      mapLink: req.body.mapLink || '',
-      tiktok: req.body.tiktok || ''
-    };
+    const images = req.files.images.map(file => file.location || file.path);
+    const videos = req.files.videos ? req.files.videos.map(file => file.location || file.path) : [];
 
     const advertisement = new Advertisement({
       nameAr: req.body.nameAr,
       nameEn: req.body.nameEn,
       descriptionAr: req.body.descriptionAr,
       descriptionEn: req.body.descriptionEn,
-      images,
-      videos,
       category: req.body.category,
       subCategory: req.body.subCategory,
       governorate: req.body.governorate,
-      socialMedia,
-      subscriptionEndDate: new Date(req.body.subscriptionEndDate),
-      displayOrder: req.body.displayOrder || 0
+      subscriptionEndDate: req.body.subscriptionEndDate,
+      displayOrder: req.body.displayOrder || 0,
+      images,
+      videos,
+      socialMedia: {
+        twitter: req.body.twitter || '',
+        instagram: req.body.instagram || '',
+        facebook: req.body.facebook || '',
+        snapchat: req.body.snapchat || '',
+        whatsapp: req.body.whatsapp || '',
+        tiktok: req.body.tiktok || '',
+        phone: req.body.phone || '',
+        website: req.body.website || '',
+        mapLink: req.body.mapLink || ''
+      },
+      isActive: true
     });
 
     await advertisement.save();
 
-    res.status(201).json({
+    res.json({
       success: true,
       message: 'Advertisement created successfully',
-      data: advertisement
+      data: advertisement.toObject()
     });
   } catch (error) {
+    console.error(error);
     res.status(500).json({ 
       success: false,
       message: error.message 
@@ -98,48 +99,44 @@ router.put('/advertisements/:id', upload.fields([
   { name: 'videos', maxCount: 5 }
 ]), async (req, res) => {
   try {
-    let advertisement = await Advertisement.findById(req.params.id);
+    const advertisement = await Advertisement.findById(req.params.id);
     if (!advertisement) {
-      return res.status(404).json({ 
-        success: false,
-        message: 'Advertisement not found' 
-      });
+      return res.status(404).json({ success: false, message: 'Advertisement not found' });
     }
 
-    const updateData = {};
+    const updateData = {
+      nameAr: req.body.nameAr || advertisement.nameAr,
+      nameEn: req.body.nameEn || advertisement.nameEn,
+      descriptionAr: req.body.descriptionAr || advertisement.descriptionAr,
+      descriptionEn: req.body.descriptionEn || advertisement.descriptionEn,
+      category: req.body.category || advertisement.category,
+      subCategory: req.body.subCategory || advertisement.subCategory,
+      governorate: req.body.governorate || advertisement.governorate,
+      subscriptionEndDate: req.body.subscriptionEndDate || advertisement.subscriptionEndDate,
+      displayOrder: req.body.displayOrder !== undefined ? req.body.displayOrder : advertisement.displayOrder,
+    };
 
-    const fields = ['nameAr', 'nameEn', 'descriptionAr', 'descriptionEn', 'category', 'subCategory', 'governorate', 'displayOrder'];
-    fields.forEach(field => {
-      if (req.body[field] !== undefined) {
-        updateData[field] = req.body[field];
-      }
-    });
-
-    if (req.body.subscriptionEndDate) {
-        updateData.subscriptionEndDate = new Date(req.body.subscriptionEndDate);
+    if (req.files && req.files.images) {
+      updateData.images = req.files.images.map(file => file.location || file.path);
     }
-    
-    let existingImages = advertisement.images;
-    if (req.body.existingImages) {
-        existingImages = req.body.existingImages.split(',').filter(p => p.trim() !== '');
-    }
-
-    let newImages = [];
-    if (req.files && req.files.images && req.files.images.length > 0) {
-      newImages = req.files.images.map(file => file.path);
-    }
-    updateData.images = [...existingImages, ...newImages];
-    
-    let existingVideos = advertisement.videos;
-    if (req.body.existingVideos) {
-        existingVideos = req.body.existingVideos.split(',').filter(p => p.trim() !== '');
+    if (req.files && req.files.videos) {
+      updateData.videos = req.files.videos.map(file => file.location || file.path);
     }
 
-    let newVideos = [];
-    if (req.files && req.files.videos && req.files.videos.length > 0) {
-      newVideos = req.files.videos.map(file => file.path);
+    const existingImages = req.body.existingImages ? JSON.parse(req.body.existingImages) : [];
+    const existingVideos = req.body.existingVideos ? JSON.parse(req.body.existingVideos) : [];
+
+    if (req.files && req.files.images) {
+      updateData.images = [...existingImages, ...updateData.images];
+    } else {
+      updateData.images = existingImages;
     }
-    updateData.videos = [...existingVideos, ...newVideos];
+
+    if (req.files && req.files.videos) {
+      updateData.videos = [...existingVideos, ...updateData.videos];
+    } else {
+      updateData.videos = existingVideos;
+    }
 
     const socialMediaFields = ['twitter', 'instagram', 'facebook', 'snapchat', 'whatsapp', 'phone', 'website', 'mapLink', 'tiktok'];
     updateData.socialMedia = { ...advertisement.socialMedia };
@@ -150,7 +147,7 @@ router.put('/advertisements/:id', upload.fields([
         }
     });
 
-    advertisement = await Advertisement.findByIdAndUpdate(
+    const updated = await Advertisement.findByIdAndUpdate(
       req.params.id,
       updateData,
       { new: true, runValidators: true }
@@ -159,9 +156,10 @@ router.put('/advertisements/:id', upload.fields([
     res.json({
       success: true,
       message: 'Advertisement updated successfully',
-      data: advertisement
+      data: updated.toObject()
     });
   } catch (error) {
+    console.error(error);
     res.status(500).json({ 
       success: false,
       message: error.message 
@@ -187,6 +185,7 @@ router.delete('/advertisements/:id', async (req, res) => {
       message: 'Advertisement deleted successfully'
     });
   } catch (error) {
+    console.error(error);
     res.status(500).json({ 
       success: false,
       message: error.message 
@@ -211,9 +210,10 @@ router.patch('/advertisements/:id/toggle', async (req, res) => {
     res.json({
       success: true,
       message: `Advertisement ${advertisement.isActive ? 'activated' : 'deactivated'} successfully`,
-      data: advertisement
+      data: advertisement.toObject()
     });
   } catch (error) {
+    console.error(error);
     res.status(500).json({ 
       success: false,
       message: error.message 
