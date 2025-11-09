@@ -10,10 +10,15 @@ const getKey = (str) =>
     .replace(/[^a-z0-9]/g, '_')
     .trim();
 
+const formatPath = (baseUrl, img) => {
+  if (typeof img !== 'string') return '';
+  if (img.startsWith('http')) return img;
+  return `${baseUrl}/${img.replace(/^\/+/, '')}`;
+};
+
 router.get('/', async (req, res) => {
   try {
     const baseUrl = process.env.BASE_URL;
-
     const { category, subCategory, governorate, limit = 50, skip = 0 } = req.query;
     
     let query = { 
@@ -32,24 +37,18 @@ router.get('/', async (req, res) => {
     
     const total = await Advertisement.countDocuments(query);
     
-    const formatPath = (img) => {
-        if (img.startsWith('http')) return img;
-        return `${baseUrl}/${img.replace(/^\/?/, '')}`;
-    };
-
     const data = advertisements.map(ad => {
       const adObject = ad.toObject();
-      
       return {
         ...adObject,
-        images: adObject.images.map(formatPath),
-        videos: adObject.videos.map(formatPath),
+        images: adObject.images.map(img => formatPath(baseUrl, img)),
+        videos: adObject.videos.map(img => formatPath(baseUrl, img)),
         category_key: getKey(adObject.subCategory || adObject.category),
         socialMedia: {
-            ...adObject.socialMedia,
-            tiktok: adObject.socialMedia.tiktok || ''
+          ...adObject.socialMedia,
+          tiktok: adObject.socialMedia.tiktok || ''
         }
-      }
+      };
     });
     
     res.json({
@@ -59,43 +58,29 @@ router.get('/', async (req, res) => {
       data
     });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ 
-      success: false,
-      message: 'Server error',
-      error: error.message 
-    });
+    res.status(500).json({ success: false });
   }
 });
 
 router.get('/:id', async (req, res) => {
   try {
     const baseUrl = process.env.BASE_URL;
-    
     const advertisement = await Advertisement.findById(req.params.id);
     
     if (!advertisement) {
-      return res.status(404).json({ 
-        success: false,
-        message: 'Advertisement not found' 
-      });
+      return res.status(404).json({ success: false });
     }
     
     const adObject = advertisement.toObject();
-
-    const formatPath = (img) => {
-        if (img.startsWith('http')) return img;
-        return `${baseUrl}/${img.replace(/^\/?/, '')}`;
-    };
-
+    
     const data = {
       ...adObject,
-      images: adObject.images.map(formatPath),
-      videos: adObject.videos.map(formatPath),
+      images: adObject.images.map(img => formatPath(baseUrl, img)),
+      videos: adObject.videos.map(img => formatPath(baseUrl, img)),
       category_key: getKey(adObject.subCategory || adObject.category),
       socialMedia: {
-          ...adObject.socialMedia,
-          tiktok: adObject.socialMedia.tiktok || ''
+        ...adObject.socialMedia,
+        tiktok: adObject.socialMedia.tiktok || ''
       }
     };
     
@@ -104,19 +89,13 @@ router.get('/:id', async (req, res) => {
       data
     });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ 
-      success: false,
-      message: 'Server error',
-      error: error.message 
-    });
+    res.status(500).json({ success: false });
   }
 });
 
 router.get('/category/:category', async (req, res) => {
   try {
     const baseUrl = process.env.BASE_URL;
-
     const { category } = req.params;
     const { governorate, subCategory } = req.query;
     
@@ -132,24 +111,18 @@ router.get('/category/:category', async (req, res) => {
     const advertisements = await Advertisement.find(query)
       .sort({ displayOrder: -1, createdAt: -1 });
     
-    const formatPath = (img) => {
-        if (img.startsWith('http')) return img;
-        return `${baseUrl}/${img.replace(/^\/?/, '')}`;
-    };
-
     const data = advertisements.map(ad => {
-        const adObject = ad.toObject();
-        
-        return {
-            ...adObject,
-            images: adObject.images.map(formatPath),
-            videos: adObject.videos.map(formatPath),
-            category_key: getKey(adObject.subCategory || adObject.category),
-            socialMedia: {
-                ...adObject.socialMedia,
-                tiktok: adObject.socialMedia.tiktok || ''
-            }
-        };
+      const adObject = ad.toObject();
+      return {
+        ...adObject,
+        images: adObject.images.map(img => formatPath(baseUrl, img)),
+        videos: adObject.videos.map(img => formatPath(baseUrl, img)),
+        category_key: getKey(adObject.subCategory || adObject.category),
+        socialMedia: {
+          ...adObject.socialMedia,
+          tiktok: adObject.socialMedia.tiktok || ''
+        }
+      };
     });
     
     res.json({
@@ -158,12 +131,7 @@ router.get('/category/:category', async (req, res) => {
       data
     });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ 
-      success: false,
-      message: 'Server error',
-      error: error.message 
-    });
+    res.status(500).json({ success: false });
   }
 });
 
