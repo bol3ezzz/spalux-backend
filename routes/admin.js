@@ -1,7 +1,6 @@
 const express = require('express');
 const router = express.Router();
 const Advertisement = require('../models/Advertisement');
-const authMiddleware = require('../middleware/auth');
 const upload = require('../middleware/upload');
 const { body, validationResult } = require('express-validator');
 
@@ -16,11 +15,9 @@ router.get('/advertisements', async (req, res) => {
       data: advertisements
     });
   } catch (error) {
-    console.error(error);
     res.status(500).json({ 
-      success: false,
-      message: 'Server error',
-      error: error.message 
+      success: false, 
+      message: error.message 
     });
   }
 });
@@ -89,11 +86,9 @@ router.post('/advertisements', upload.fields([
       data: advertisement
     });
   } catch (error) {
-    console.error(error);
     res.status(500).json({ 
       success: false,
-      message: 'Server error',
-      error: error.message 
+      message: error.message 
     });
   }
 });
@@ -167,11 +162,9 @@ router.put('/advertisements/:id', upload.fields([
       data: advertisement
     });
   } catch (error) {
-    console.error(error);
     res.status(500).json({ 
       success: false,
-      message: 'Server error',
-      error: error.message 
+      message: error.message 
     });
   }
 });
@@ -194,11 +187,9 @@ router.delete('/advertisements/:id', async (req, res) => {
       message: 'Advertisement deleted successfully'
     });
   } catch (error) {
-    console.error(error);
     res.status(500).json({ 
       success: false,
-      message: 'Server error',
-      error: error.message 
+      message: error.message 
     });
   }
 });
@@ -223,11 +214,9 @@ router.patch('/advertisements/:id/toggle', async (req, res) => {
       data: advertisement
     });
   } catch (error) {
-    console.error(error);
     res.status(500).json({ 
       success: false,
-      message: 'Server error',
-      error: error.message 
+      message: error.message 
     });
   }
 });

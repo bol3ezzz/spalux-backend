@@ -83,7 +83,7 @@
                 <p>إعلانات الرجال</p>
             </div>
             <div class="stat-card" id="stat-women" onclick="filterAds('women')">
-                <h3 id="womenAds">0</h3>
+                <h3 id="womenAds">0</ ب>
                 <p>إعلانات السيدات</p>
             </div>
             <div class="stat-card" id="stat-children" onclick="filterAds('children')">
@@ -253,7 +253,7 @@
     </div>
 
     <script>
-        const API_URL = 'http://localhost:3000/api';
+        const API_URL = 'https://spalux-backend.onrender.com/api';
         let allAds = [];
 
         document.getElementById('imageInput').addEventListener('change', function(e) {
@@ -272,7 +272,7 @@
 
         async function fetchAdsAndLoadStats() {
             try {
-                const res = await fetch(`${API_URL}/advertisements`);
+                const res = await fetch(`${API_URL}/admin/advertisements`);
                 const data = await res.json();
                 
                 if (data.success && data.data.length > 0) {
@@ -460,7 +460,7 @@
                     const item = document.createElement('div');
                     item.className = 'old-file-item';
                     item.innerHTML = `
-                        <img src="/placeholder-video.jpg" alt="Video" style="border: 2px solid orange;">
+                        <img src="/placeholder-video.jpg" alt="Video">
                         <button onclick="removeOldFile(this, '${vid}')">✕</button>
                     `;
                     oldVideoPreview.appendChild(item);
@@ -501,7 +501,7 @@
             
             try {
                 const url = adId ? `${API_URL}/admin/advertisements/${adId}` : `${API_URL}/admin/advertisements`;
-                const method = adId ? 'PATCH' : 'POST'; 
+                const method = adId ? 'PUT' : 'POST'; 
 
                 const res = await fetch(url, {
                     method: method,
