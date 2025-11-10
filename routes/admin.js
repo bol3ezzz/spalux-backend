@@ -148,7 +148,7 @@ router.delete('/advertisements/:id', async (req, res) => {
     if (!advertisement) {
       return res.status(404).json({ success: false, message: 'Advertisement not found' });
     }
- )   res.json({ success: true, message: 'Advertisement deleted successfully' });
+    res.json({ success: true, message: 'Advertisement deleted successfully' });
   } catch (error) {
     console.error(error);
     res.status(500).json({ success: false, message: 'Server error', error: error.message });
