@@ -17,12 +17,9 @@
         input, textarea, select { width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 5px; font-size: 14px; transition: border 0.3s; }
         input:focus, textarea:focus, select:focus { outline: none; border-color: #90EE90; }
         textarea { min-height: 100px; resize: vertical; font-family: inherit; }
-        .action-buttons button { margin-left: 10px; }
         button { background: #90EE90; color: white; padding: 12px 30px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: bold; transition: background 0.3s; }
         button:hover { background: #7FDD7F; }
         button:disabled { background: #ccc; cursor: not-allowed; }
-        .btn-cancel { background: #6c757d; }
-        .btn-cancel:hover { background: #5a6268; }
         .ads-list { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
         .ad-item { padding: 20px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; transition: background 0.3s; }
         .ad-item:hover { background: #f9f9f9; }
@@ -35,25 +32,18 @@
         .btn-delete:hover { background: #cc0000; }
         .btn-toggle { background: #FFA500; padding: 8px 15px; font-size: 14px; }
         .btn-toggle:hover { background: #FF8C00; }
-        .btn-edit { background: #2196F3; padding: 8px 15px; font-size: 14px; }
-        .btn-edit:hover { background: #1976D2; }
         .success { background: #d4edda; color: #155724; padding: 15px; border-radius: 5px; margin-bottom: 20px; border: 1px solid #c3e6cb; }
         .error { background: #f8d7da; color: #721c24; padding: 15px; border-radius: 5px; margin-bottom: 20px; border: 1px solid #f5c6cb; }
         .loading { text-align: center; padding: 20px; color: #666; }
-        .stats { display: grid; grid-template-columns: repeat(6, 1fr); gap: 15px; margin-bottom: 30px; }
-        .stat-card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); text-align: center; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; }
-        .stat-card:hover { transform: translateY(-3px); box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        .stat-card.active-filter { border: 3px solid #90EE90; box-shadow: 0 0 0 5px rgba(144, 238, 144, 0.4); }
-        .stat-card h3 { font-size: 30px; color: #90EE90; margin-bottom: 5px; }
-        .stat-card p { color: #666; font-weight: bold; }
+        .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 30px; }
+        .stat-card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); text-align: center; }
+        .stat-card h3 { font-size: 32px; color: #90EE90; margin-bottom: 5px; }
+        .stat-card p { color: #666; }
         .file-preview { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
         .file-preview img { width: 100px; height: 100px; object-fit: cover; border-radius: 5px; border: 2px solid #ddd; }
         .badge { display: inline-block; padding: 4px 8px; border-radius: 3px; font-size: 12px; font-weight: bold; }
         .badge.active { background: #d4edda; color: #155724; }
         .badge.inactive { background: #f8d7da; color: #721c24; }
-        .old-file-item { position: relative; width: 100px; height: 100px; }
-        .old-file-item button { position: absolute; top: 0px; right: 0px; background: rgba(255, 0, 0, 0.8); border: none; color: white; padding: 5px; line-height: 1; border-radius: 0 5px 0 5px; cursor: pointer; font-size: 12px; z-index: 10; }
-        .old-file-item button:hover { background: red; }
     </style>
 </head>
 <body>
@@ -66,37 +56,27 @@
         <div id="message"></div>
 
         <div class="stats">
-            <div class="stat-card active-filter" id="stat-all" onclick="filterAds('all')">
+            <div class="stat-card">
                 <h3 id="totalAds">0</h3>
-                <p>جميع الإعلانات</p>
+                <p>إجمالي الإعلانات</p>
             </div>
-            <div class="stat-card" id="stat-active" onclick="filterAds('active')">
+            <div class="stat-card">
                 <h3 id="activeAds">0</h3>
                 <p>الإعلانات النشطة</p>
             </div>
-             <div class="stat-card" id="stat-inactive" onclick="filterAds('inactive')">
-                <h3 id="inactiveAds">0</h3>
-                <p>الإعلانات الموقوفة</p>
-            </div>
-            <div class="stat-card" id="stat-men" onclick="filterAds('men')">
+            <div class="stat-card">
                 <h3 id="menAds">0</h3>
                 <p>إعلانات الرجال</p>
             </div>
-            <div class="stat-card" id="stat-women" onclick="filterAds('women')">
-                <h3 id="womenAds">0</ ب>
+            <div class="stat-card">
+                <h3 id="womenAds">0</h3>
                 <p>إعلانات السيدات</p>
-            </div>
-            <div class="stat-card" id="stat-children" onclick="filterAds('children')">
-                <h3 id="childrenAds">0</h3>
-                <p>إعلانات الأطفال</p>
             </div>
         </div>
 
         <div class="form-card">
             <h2>➕ إضافة إعلان جديد</h2>
             <form id="adForm" enctype="multipart/form-data">
-                <input type="hidden" name="adId" id="adId" value="">
-
                 <div class="form-row">
                     <div class="form-group">
                         <label>الاسم بالعربية *</label>
@@ -138,7 +118,6 @@
                             <option value="beauty_clinic">عيادات تجميل</option>
                             <option value="mens_salon">صالون رجالي</option>
                             <option value="womens_salon">صالون نسائي</option>
-                            <option value="children_salon">صالون أطفال</option>
                             <option value="home_services">خدمات منزلية</option>
                             <option value="body_care">عناية بالجسم</option>
                         </select>
@@ -165,21 +144,13 @@
                 </div>
 
                 <div class="form-group full">
-                    <label>الصور الحالية (لحذف صورة اضغط ✕)</label>
-                    <div id="oldImagePreview" class="file-preview"></div>
-                    <input type="hidden" name="existingImages" id="existingImages" value="">
-
-                    <label style="margin-top: 15px;">إضافة صور جديدة (حتى 10 صور)</label>
-                    <input type="file" name="images" multiple accept="image/*" id="imageInput">
+                    <label>الصور (حتى 10 صور) *</label>
+                    <input type="file" name="images" multiple accept="image/*" required id="imageInput">
                     <div id="imagePreview" class="file-preview"></div>
                 </div>
 
                 <div class="form-group full">
-                    <label>الفيديوهات الحالية (لحذف فيديو اضغط ✕)</label>
-                    <div id="oldVideoPreview" class="file-preview"></div>
-                    <input type="hidden" name="existingVideos" id="existingVideos" value="">
-                    
-                    <label style="margin-top: 15px;">إضافة فيديوهات جديدة (حتى 2 فيديو)</label>
+                    <label>فيديوهات (حتى 2 فيديو)</label>
                     <input type="file" name="videos" multiple accept="video/*" id="videoInput">
                 </div>
 
@@ -209,16 +180,6 @@
 
                 <div class="form-row">
                     <div class="form-group">
-                        <label>تيك توك</label>
-                        <input type="url" name="tiktok" placeholder="https://tiktok.com/@...">
-                    </div>
-                    <div class="form-group">
-                        
-                    </div>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
                         <label>واتساب</label>
                         <input type="tel" name="whatsapp" placeholder="+965...">
                     </div>
@@ -239,10 +200,7 @@
                     </div>
                 </div>
 
-                <div class="action-buttons">
-                    <button type="submit" id="submitBtn">إضافة الإعلان</button>
-                    <button type="button" class="btn-cancel" id="cancelEditBtn" onclick="cancelEditMode()" style="display: none;">إلغاء التعديلات</button>
-                </div>
+                <button type="submit" id="submitBtn">إضافة الإعلان</button>
             </form>
         </div>
 
@@ -253,8 +211,7 @@
     </div>
 
     <script>
-        const API_URL = 'https://spalux-backend.onrender.com/api';
-        let allAds = [];
+        const API_URL = 'https://spalux-backend-hsl4.onrender.com/api';
 
         document.getElementById('imageInput').addEventListener('change', function(e) {
             const preview = document.getElementById('imagePreview');
@@ -270,259 +227,83 @@
             });
         });
 
-        async function fetchAdsAndLoadStats() {
+        async function loadAds() {
             try {
                 const res = await fetch(`${API_URL}/advertisements`);
                 const data = await res.json();
+                const list = document.getElementById('adsList');
                 
                 if (data.success && data.data.length > 0) {
-                    allAds = data.data;
+                    document.getElementById('totalAds').textContent = data.data.length;
+                    document.getElementById('activeAds').textContent = data.data.filter(ad => ad.isActive).length;
+                    document.getElementById('menAds').textContent = data.data.filter(ad => ad.category === 'men').length;
+                    document.getElementById('womenAds').textContent = data.data.filter(ad => ad.category === 'women').length;
 
-                    const totalCount = allAds.length;
-                    const activeCount = allAds.filter(ad => ad.isActive).length;
-                    const menCount = allAds.filter(ad => ad.category === 'men').length;
-                    const womenCount = allAds.filter(ad => ad.category === 'women').length;
-                    const childrenCount = allAds.filter(ad => ad.category === 'children').length;
-                    const inactiveCount = totalCount - activeCount;
-
-                    document.getElementById('totalAds').textContent = totalCount;
-                    document.getElementById('activeAds').textContent = activeCount;
-                    document.getElementById('menAds').textContent = menCount;
-                    document.getElementById('womenAds').textContent = womenCount;
-                    document.getElementById('childrenAds').textContent = childrenCount;
-                    document.getElementById('inactiveAds').textContent = inactiveCount;
-
-                    filterAds('all');
+                    list.innerHTML = data.data.map(ad => `
+                        <div class="ad-item">
+                            <div class="ad-info">
+                                <h3>${ad.nameAr} - ${ad.nameEn}</h3>
+                                <p>
+                                    <span class="badge ${ad.isActive ? 'active' : 'inactive'}">
+                                        ${ad.isActive ? 'نشط' : 'غير نشط'}
+                                    </span>
+                                    ${ad.category} | ${ad.subCategory} | ${ad.governorate}
+                                </p>
+                                <p style="margin-top: 5px; font-size: 12px;">
+                                    ${ad.images.length} صور | ${ad.videos.length} فيديو | 
+                                    انتهاء: ${new Date(ad.subscriptionEndDate).toLocaleDateString('ar-EG')}
+                                </p>
+                            </div>
+                            <div class="ad-actions">
+                                <button class="btn-toggle" onclick="toggleAd('${ad._id}', ${ad.isActive})">
+                                    ${ad.isActive ? 'إيقاف' : 'تفعيل'}
+                                </button>
+                                <button class="btn-delete" onclick="deleteAd('${ad._id}')">حذف</button>
+                            </div>
+                        </div>
+                    `).join('');
                 } else {
-                    document.getElementById('adsList').innerHTML = '<p style="text-align: center; padding: 40px; color: #999;">لا توجد إعلانات حالياً</p>';
+                    list.innerHTML = '<p style="text-align: center; padding: 40px; color: #999;">لا توجد إعلانات حالياً</p>';
                     document.getElementById('totalAds').textContent = '0';
                     document.getElementById('activeAds').textContent = '0';
                     document.getElementById('menAds').textContent = '0';
                     document.getElementById('womenAds').textContent = '0';
-                    document.getElementById('childrenAds').textContent = '0'; 
-                    document.getElementById('inactiveAds').textContent = '0';
-                    allAds = [];
                 }
             } catch (error) {
+                console.error(error);
                 document.getElementById('adsList').innerHTML = '<p style="text-align: center; padding: 40px; color: #ff0000;">خطأ في تحميل الإعلانات. تأكد من تشغيل Backend</p>';
             }
         }
 
-        function renderAds(adsToRender) {
-            const list = document.getElementById('adsList');
-            if (adsToRender.length > 0) {
-                list.innerHTML = adsToRender.map(ad => `
-                    <div class="ad-item">
-                        <div class="ad-info">
-                            <h3>${ad.nameAr} - ${ad.nameEn}</h3>
-                            <p>
-                                <span class="badge ${ad.isActive ? 'active' : 'inactive'}">
-                                    ${ad.isActive ? 'نشط' : 'غير نشط'}
-                                </span>
-                                ${ad.category} | ${ad.subCategory} | ${ad.governorate}
-                            </p>
-                            <p style="margin-top: 5px; font-size: 12px;">
-                                ${ad.images.length} صور | ${ad.videos.length} فيديو | 
-                                انتهاء: ${new Date(ad.subscriptionEndDate).toLocaleDateString('ar-EG')}
-                            </p>
-                        </div>
-                        <div class="ad-actions">
-                            <button class="btn-edit" onclick="editAd('${ad._id}')">تعديل</button>
-                            <button class="btn-toggle" onclick="toggleAd('${ad._id}', ${ad.isActive})">
-                                ${ad.isActive ? 'إيقاف' : 'تفعيل'}
-                            </button>
-                            <button class="btn-delete" onclick="deleteAd('${ad._id}')">حذف</button>
-                        </div>
-                    </div>
-                `).join('');
-            } else {
-                list.innerHTML = '<p style="text-align: center; padding: 40px; color: #999;">لا توجد إعلانات مطابقة</p>';
-            }
-        }
-
-        function filterAds(category) {
-            let filteredAds;
-            const statCards = document.querySelectorAll('.stat-card');
-            statCards.forEach(card => card.classList.remove('active-filter'));
-
-            if (category === 'all') {
-                filteredAds = allAds;
-                document.getElementById('stat-all').classList.add('active-filter');
-            } else if (category === 'active') {
-                filteredAds = allAds.filter(ad => ad.isActive);
-                document.getElementById('stat-active').classList.add('active-filter');
-            } else if (category === 'inactive') {
-                filteredAds = allAds.filter(ad => !ad.isActive);
-                document.getElementById('stat-inactive').classList.add('active-filter');
-            } else if (category === 'men') {
-                filteredAds = allAds.filter(ad => ad.category === 'men');
-                document.getElementById('stat-men').classList.add('active-filter');
-            } else if (category === 'women') {
-                filteredAds = allAds.filter(ad => ad.category === 'women');
-                document.getElementById('stat-women').classList.add('active-filter');
-            } else if (category === 'children') {
-                filteredAds = allAds.filter(ad => ad.category === 'children');
-                document.getElementById('stat-children').classList.add('active-filter');
-            } else {
-                filteredAds = allAds;
-                document.getElementById('stat-all').classList.add('active-filter');
-            }
-
-            renderAds(filteredAds);
-        }
-
-        function removeOldFile(element, filePath) {
-            element.closest('.old-file-item').remove();
-            
-            const existingImagesInput = document.getElementById('existingImages');
-            const existingVideosInput = document.getElementById('existingVideos');
-            
-            if (existingImagesInput.value.includes(filePath)) {
-                let paths = existingImagesInput.value.split(',').filter(p => p.trim() !== filePath);
-                existingImagesInput.value = paths.join(',');
-            }
-            if (existingVideosInput.value.includes(filePath)) {
-                let paths = existingVideosInput.value.split(',').filter(p => p.trim() !== filePath);
-                existingVideosInput.value = paths.join(',');
-            }
-        }
-        
-        function cancelEditMode() {
-            document.getElementById('adForm').reset();
-            document.getElementById('adId').value = '';
-            document.getElementById('imagePreview').innerHTML = '';
-            document.getElementById('oldImagePreview').innerHTML = '';
-            document.getElementById('oldVideoPreview').innerHTML = '';
-            document.getElementById('submitBtn').textContent = 'إضافة الإعلان';
-            document.querySelector('.form-card h2').textContent = '➕ إضافة إعلان جديد';
-            document.getElementById('cancelEditBtn').style.display = 'none';
-
-            const dateInput = document.querySelector('input[name="subscriptionEndDate"]');
-            const defaultDate = new Date();
-            defaultDate.setDate(defaultDate.getDate() + 30);
-            dateInput.value = defaultDate.toISOString().split('T')[0];
-        }
-
-        async function editAd(id) {
-            showMessage(`⏳ جاري تحميل بيانات الإعلان (${id}) للتعديل...`, 'success');
-            
-            try {
-                const res = await fetch(`${API_URL}/advertisements/${id}`); 
-                const ad = await res.json();
-                
-                if (!ad.success || !ad.data) {
-                    showMessage('❌ خطأ: لم يتم العثور على بيانات الإعلان.', 'error');
-                    return;
-                }
-                const adData = ad.data;
-
-                document.querySelector('input[name="nameAr"]').value = adData.nameAr || '';
-                document.querySelector('input[name="nameEn"]').value = adData.nameEn || '';
-                document.querySelector('textarea[name="descriptionAr"]').value = adData.descriptionAr || '';
-                document.querySelector('textarea[name="descriptionEn"]').value = adData.descriptionEn || '';
-                document.querySelector('select[name="category"]').value = adData.category || '';
-                document.querySelector('select[name="subCategory"]').value = adData.subCategory || '';
-                document.querySelector('select[name="governorate"]').value = adData.governorate || '';
-                document.querySelector('input[name="subscriptionEndDate"]').value = adData.subscriptionEndDate ? adData.subscriptionEndDate.split('T')[0] : '';
-
-                document.querySelector('input[name="facebook"]').value = adData.facebook || '';
-                document.querySelector('input[name="instagram"]').value = adData.instagram || '';
-                document.querySelector('input[name="twitter"]').value = adData.twitter || '';
-                document.querySelector('input[name="snapchat"]').value = adData.snapchat || '';
-                document.querySelector('input[name="whatsapp"]').value = adData.whatsapp || '';
-                document.querySelector('input[name="phone"]').value = adData.phone || '';
-                document.querySelector('input[name="website"]').value = adData.website || '';
-                document.querySelector('input[name="mapLink"]').value = adData.mapLink || '';
-                document.querySelector('input[name="tiktok"]').value = adData.tiktok || ''; 
-
-                const oldImagePreview = document.getElementById('oldImagePreview');
-                const oldVideoPreview = document.getElementById('oldVideoPreview');
-                oldImagePreview.innerHTML = '';
-                oldVideoPreview.innerHTML = '';
-
-                const existingImagesPaths = (adData.images || []).join(',');
-                document.getElementById('existingImages').value = existingImagesPaths;
-
-                (adData.images || []).forEach(img => {
-                    const item = document.createElement('div');
-                    item.className = 'old-file-item';
-                    item.innerHTML = `
-                        <img src="${img}" alt="Image">
-                        <button onclick="removeOldFile(this, '${img}')">✕</button>
-                    `;
-                    oldImagePreview.appendChild(item);
-                });
-
-                const existingVideosPaths = (adData.videos || []).join(',');
-                document.getElementById('existingVideos').value = existingVideosPaths;
-                
-                (adData.videos || []).forEach(vid => {
-                    const item = document.createElement('div');
-                    item.className = 'old-file-item';
-                    item.innerHTML = `
-                        <img src="/placeholder-video.jpg" alt="Video">
-                        <button onclick="removeOldFile(this, '${vid}')">✕</button>
-                    `;
-                    oldVideoPreview.appendChild(item);
-                });
-
-                document.getElementById('imageInput').value = null;
-                document.getElementById('videoInput').value = null;
-                document.getElementById('imagePreview').innerHTML = '';
-                
-                document.getElementById('adId').value = id;
-                document.getElementById('submitBtn').textContent = 'حفظ التعديلات';
-                document.querySelector('.form-card h2').textContent = '✏️ تعديل إعلان حالي';
-                document.getElementById('cancelEditBtn').style.display = 'inline-block';
-                
-                showMessage('✅ تم تحميل البيانات. يمكنك الآن التعديل وحفظ التغييرات.', 'success');
-
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-                
-            } catch (error) {
-                showMessage('❌ خطأ في الاتصال بالسيرفر أو تحميل بيانات الإعلان.', 'error');
-            }
-        }
-
-
         document.getElementById('adForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const formData = new FormData(e.target);
-            const adId = document.getElementById('adId').value;
             const submitBtn = document.getElementById('submitBtn');
             
             submitBtn.disabled = true;
-            submitBtn.textContent = adId ? 'جاري التعديل...' : 'جاري الإضافة...';
-            
-            if (adId) {
-                formData.set('existingImages', document.getElementById('existingImages').value);
-                formData.set('existingVideos', document.getElementById('existingVideos').value);
-            }
+            submitBtn.textContent = 'جاري الإضافة...';
             
             try {
-                const url = adId ? `${API_URL}/admin/advertisements/${adId}` : `${API_URL}/admin/advertisements`;
-                const method = adId ? 'PUT' : 'POST'; 
-
-                const res = await fetch(url, {
-                    method: method,
-                    body: formData 
+                const res = await fetch(`${API_URL}/admin/advertisements`, {
+                    method: 'POST',
+                    body: formData
                 });
                 
                 const data = await res.json();
                 
                 if (data.success) {
-                    showMessage(`✅ تم ${adId ? 'تعديل' : 'إضافة'} الإعلان بنجاح!`, 'success');
-                    cancelEditMode();
-                    
-                    await fetchAdsAndLoadStats();
+                    showMessage('✅ تم إضافة الإعلان بنجاح!', 'success');
+                    e.target.reset();
+                    document.getElementById('imagePreview').innerHTML = '';
+                    loadAds();
                 } else {
-                    showMessage('❌ خطأ: ' + (data.message || `فشل في ${adId ? 'تعديل' : 'إضافة'} الإعلان`), 'error');
+                    showMessage('❌ خطأ: ' + (data.message || 'فشل في إضافة الإعلان'), 'error');
                 }
             } catch (error) {
                 showMessage('❌ خطأ في الاتصال بالسيرفر. تأكد من تشغيل Backend', 'error');
             } finally {
                 submitBtn.disabled = false;
-                document.getElementById('submitBtn').textContent = document.getElementById('adId').value ? 'حفظ التعديلات' : 'إضافة الإعلان';
+                submitBtn.textContent = 'إضافة الإعلان';
             }
         });
 
@@ -536,7 +317,7 @@
                 
                 if (data.success) {
                     showMessage(`✅ ${currentStatus ? 'تم إيقاف' : 'تم تفعيل'} الإعلان بنجاح!`, 'success');
-                    await fetchAdsAndLoadStats();
+                    loadAds();
                 } else {
                     showMessage('❌ خطأ: ' + data.message, 'error');
                 }
@@ -557,7 +338,7 @@
                 
                 if (data.success) {
                     showMessage('✅ تم حذف الإعلان بنجاح!', 'success');
-                    await fetchAdsAndLoadStats();
+                    loadAds();
                 } else {
                     showMessage('❌ خطأ: ' + data.message, 'error');
                 }
@@ -582,7 +363,7 @@
         dateInput.value = defaultDate.toISOString().split('T')[0];
         dateInput.min = new Date().toISOString().split('T')[0];
 
-        fetchAdsAndLoadStats();
+        loadAds();
     </script>
 </body>
 </html>

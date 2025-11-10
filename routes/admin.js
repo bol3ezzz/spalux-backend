@@ -1,44 +1,16 @@
 const express = require('express');
 const router = express.Router();
-const path = require('path');
 const Advertisement = require('../models/Advertisement');
-const upload = require('../middleware/upload');
+const authMiddleware = require('../middleware/auth');
+const { uploadFields } = require('../middleware/upload');
 const { body, validationResult } = require('express-validator');
 
-const PROJECT_ROOT = path.join(__dirname, '..');
+// Apply auth middleware to all routes
+// router.use(authMiddleware); // DISABLED - No authentication required
 
-const resolveStoredFilePath = (file) => {
-  if (!file) return null;
-  if (file.location) return file.location;
-
-  const absolutePath = file.path
-    || (file.destination && file.filename
-      ? path.join(file.destination, file.filename)
-      : null);
-
-  if (!absolutePath) return null;
-
-  const relativePath = path.relative(PROJECT_ROOT, absolutePath);
-  return `/${relativePath.replace(/\\/g, '/')}`;
-};
-
-const mapStoredFiles = (files = []) =>
-  files
-    .map(resolveStoredFilePath)
-    .filter(Boolean);
-
-const parseJsonArray = (value) => {
-  if (!value) return [];
-  if (Array.isArray(value)) return value;
-
-  try {
-    const parsed = JSON.parse(value);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch (error) {
-    return [];
-  }
-};
-
+// @route   GET /api/admin/advertisements
+// @desc    Get all advertisements (including inactive)
+// @access  Private (Admin only)
 router.get('/advertisements', async (req, res) => {
   try {
     const advertisements = await Advertisement.find()
@@ -47,27 +19,28 @@ router.get('/advertisements', async (req, res) => {
     res.json({
       success: true,
       count: advertisements.length,
-      data: advertisements.map(ad => ad.toObject())
+      data: advertisements
     });
   } catch (error) {
     console.error(error);
     res.status(500).json({ 
-      success: false, 
-      message: 'Server error' 
+      success: false,
+      message: 'Server error',
+      error: error.message 
     });
   }
 });
 
-router.post('/advertisements', upload.fields([
-  { name: 'images', maxCount: 10 },
-  { name: 'videos', maxCount: 5 }
-]), [
+// @route   POST /api/admin/advertisements
+// @desc    Create new advertisement
+// @access  Private (Admin only)
+router.post('/advertisements', uploadFields, [
   body('nameAr').trim().notEmpty().withMessage('Arabic name is required'),
   body('nameEn').trim().notEmpty().withMessage('English name is required'),
   body('descriptionAr').trim().notEmpty().withMessage('Arabic description is required'),
   body('descriptionEn').trim().notEmpty().withMessage('English description is required'),
   body('category').isIn(['men', 'women', 'children']).withMessage('Invalid category'),
-  body('subCategory').isIn(['spa', 'cupping', 'beauty_clinic', 'mens_salon', 'womens_salon', 'home_services', 'body_care', 'children_salon']).withMessage('Invalid sub-category'),
+  body('subCategory').isIn(['spa', 'cupping', 'beauty_clinic', 'mens_salon', 'womens_salon', 'home_services', 'body_care']).withMessage('Invalid sub-category'),
   body('governorate').isIn(['capital', 'ahmadi', 'farwaniya', 'jahra', 'mubarak_al_kabeer', 'hawalli']).withMessage('Invalid governorate'),
   body('subscriptionEndDate').isISO8601().withMessage('Invalid subscription end date')
 ], async (req, res) => {
@@ -77,43 +50,46 @@ router.post('/advertisements', upload.fields([
       return res.status(400).json({ success: false, errors: errors.array() });
     }
 
-    const uploadedImages = (req.files && req.files.images) ? req.files.images : [];
-    const images = mapStoredFiles(uploadedImages);
-    
-    if (!images.length) {
-      return res.status(400).json({
+    // Check if files were uploaded
+    if (!req.files || !req.files.images || req.files.images.length === 0) {
+      return res.status(400).json({ 
         success: false,
-        message: 'At least one image is required'
+        message: 'At least one image is required' 
       });
     }
 
-    const uploadedVideos = (req.files && req.files.videos) ? req.files.videos : [];
-    const videos = mapStoredFiles(uploadedVideos);
+    // Prepare image URLs
+    const images = req.files.images.map(file => `/uploads/${file.filename}`);
+    
+    // Prepare video URLs (if any)
+    const videos = req.files.videos ? req.files.videos.map(file => `/uploads/${file.filename}`) : [];
 
+    // Parse social media data
+    const socialMedia = {
+      twitter: req.body.twitter || '',
+      instagram: req.body.instagram || '',
+      facebook: req.body.facebook || '',
+      snapchat: req.body.snapchat || '',
+      whatsapp: req.body.whatsapp || '',
+      phone: req.body.phone || '',
+      website: req.body.website || '',
+      mapLink: req.body.mapLink || ''
+    };
+
+    // Create advertisement
     const advertisement = new Advertisement({
       nameAr: req.body.nameAr,
       nameEn: req.body.nameEn,
       descriptionAr: req.body.descriptionAr,
       descriptionEn: req.body.descriptionEn,
+      images,
+      videos,
       category: req.body.category,
       subCategory: req.body.subCategory,
       governorate: req.body.governorate,
-      subscriptionEndDate: req.body.subscriptionEndDate,
-      displayOrder: req.body.displayOrder || 0,
-      images,
-      videos,
-      socialMedia: {
-        twitter: req.body.twitter || '',
-        instagram: req.body.instagram || '',
-        facebook: req.body.facebook || '',
-        snapchat: req.body.snapchat || '',
-        whatsapp: req.body.whatsapp || '',
-        tiktok: req.body.tiktok || '',
-        phone: req.body.phone || '',
-        website: req.body.website || '',
-        mapLink: req.body.mapLink || ''
-      },
-      isActive: true
+      socialMedia,
+      subscriptionEndDate: new Date(req.body.subscriptionEndDate),
+      displayOrder: req.body.displayOrder || 0
     });
 
     await advertisement.save();
@@ -121,27 +97,33 @@ router.post('/advertisements', upload.fields([
     res.status(201).json({
       success: true,
       message: 'Advertisement created successfully',
-      data: advertisement.toObject()
+      data: advertisement
     });
   } catch (error) {
     console.error(error);
     res.status(500).json({ 
-      success: false, 
-      message: 'Server error' 
+      success: false,
+      message: 'Server error',
+      error: error.message 
     });
   }
 });
 
-router.put('/advertisements/:id', upload.fields([
-  { name: 'images', maxCount: 10 },
-  { name: 'videos', maxCount: 5 }
-]), async (req, res) => {
+// @route   PUT /api/admin/advertisements/:id
+// @desc    Update advertisement
+// @access  Private (Admin only)
+router.put('/advertisements/:id', uploadFields, async (req, res) => {
   try {
-    const advertisement = await Advertisement.findById(req.params.id);
+    let advertisement = await Advertisement.findById(req.params.id);
+    
     if (!advertisement) {
-      return res.status(404).json({ success: false, message: 'Advertisement not found' });
+      return res.status(404).json({ 
+        success: false,
+        message: 'Advertisement not found' 
+      });
     }
 
+    // Prepare update data
     const updateData = {
       nameAr: req.body.nameAr || advertisement.nameAr,
       nameEn: req.body.nameEn || advertisement.nameEn,
@@ -150,34 +132,43 @@ router.put('/advertisements/:id', upload.fields([
       category: req.body.category || advertisement.category,
       subCategory: req.body.subCategory || advertisement.subCategory,
       governorate: req.body.governorate || advertisement.governorate,
-      subscriptionEndDate: req.body.subscriptionEndDate || advertisement.subscriptionEndDate,
+      subscriptionEndDate: req.body.subscriptionEndDate ? new Date(req.body.subscriptionEndDate) : advertisement.subscriptionEndDate,
       displayOrder: req.body.displayOrder !== undefined ? req.body.displayOrder : advertisement.displayOrder,
+      isActive: req.body.isActive !== undefined ? req.body.isActive : advertisement.isActive
     };
 
-    const newImages = mapStoredFiles((req.files && req.files.images) ? req.files.images : []);
-    const newVideos = mapStoredFiles((req.files && req.files.videos) ? req.files.videos : []);
+    // Update images if new ones uploaded
+    if (req.files && req.files.images && req.files.images.length > 0) {
+      updateData.images = req.files.images.map(file => `/uploads/${file.filename}`);
+    }
 
-    const existingImages = parseJsonArray(req.body.existingImages);
-    const existingVideos = parseJsonArray(req.body.existingVideos);
+    // Update videos if new ones uploaded
+    if (req.files && req.files.videos && req.files.videos.length > 0) {
+      updateData.videos = req.files.videos.map(file => `/uploads/${file.filename}`);
+    }
 
-    updateData.images = newImages.length
-      ? [...existingImages, ...newImages]
-      : existingImages;
+    // Update social media
+    if (req.body.twitter !== undefined || 
+        req.body.instagram !== undefined || 
+        req.body.facebook !== undefined || 
+        req.body.snapchat !== undefined || 
+        req.body.whatsapp !== undefined || 
+        req.body.phone !== undefined || 
+        req.body.website !== undefined || 
+        req.body.mapLink !== undefined) {
+      updateData.socialMedia = {
+        twitter: req.body.twitter || advertisement.socialMedia.twitter,
+        instagram: req.body.instagram || advertisement.socialMedia.instagram,
+        facebook: req.body.facebook || advertisement.socialMedia.facebook,
+        snapchat: req.body.snapchat || advertisement.socialMedia.snapchat,
+        whatsapp: req.body.whatsapp || advertisement.socialMedia.whatsapp,
+        phone: req.body.phone || advertisement.socialMedia.phone,
+        website: req.body.website || advertisement.socialMedia.website,
+        mapLink: req.body.mapLink || advertisement.socialMedia.mapLink
+      };
+    }
 
-    updateData.videos = newVideos.length
-      ? [...existingVideos, ...newVideos]
-      : existingVideos;
-
-    const socialMediaFields = ['twitter', 'instagram', 'facebook', 'snapchat', 'whatsapp', 'phone', 'website', 'mapLink', 'tiktok'];
-    updateData.socialMedia = { ...advertisement.socialMedia };
-
-    socialMediaFields.forEach(field => {
-        if (req.body[field] !== undefined) {
-            updateData.socialMedia[field] = req.body[field];
-        }
-    });
-
-    const updated = await Advertisement.findByIdAndUpdate(
+    advertisement = await Advertisement.findByIdAndUpdate(
       req.params.id,
       updateData,
       { new: true, runValidators: true }
@@ -186,47 +177,33 @@ router.put('/advertisements/:id', upload.fields([
     res.json({
       success: true,
       message: 'Advertisement updated successfully',
-      data: updated.toObject()
+      data: advertisement
     });
   } catch (error) {
     console.error(error);
     res.status(500).json({ 
       success: false,
-      message: 'Server error'
+      message: 'Server error',
+      error: error.message 
     });
   }
 });
 
-router.patch('/advertisements/:id/toggle', async (req, res) => {
-  try {
-    const advertisement = await Advertisement.findById(req.params.id);
-    if (!advertisement) {
-      return res.status(404).json({ success: false, message: 'Advertisement not found' });
-    }
-
-    advertisement.isActive = !advertisement.isActive;
-    await advertisement.save();
-
-    res.json({
-      success: true,
-      message: `Advertisement ${advertisement.isActive ? 'activated' : 'deactivated'} successfully`,
-      data: advertisement.toObject()
-    });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ 
-      success: false, 
-      message: 'Server error' 
-    });
-  }
-});
-
+// @route   DELETE /api/admin/advertisements/:id
+// @desc    Delete advertisement
+// @access  Private (Admin only)
 router.delete('/advertisements/:id', async (req, res) => {
   try {
-    const advertisement = await Advertisement.findByIdAndDelete(req.params.id);
+    const advertisement = await Advertisement.findById(req.params.id);
+    
     if (!advertisement) {
-      return res.status(404).json({ success: false, message: 'Advertisement not found' });
+      return res.status(404).json({ 
+        success: false,
+        message: 'Advertisement not found' 
+      });
     }
+
+    await Advertisement.findByIdAndDelete(req.params.id);
 
     res.json({
       success: true,
@@ -235,8 +212,41 @@ router.delete('/advertisements/:id', async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ 
-      success: false, 
-      message: 'Server error' 
+      success: false,
+      message: 'Server error',
+      error: error.message 
+    });
+  }
+});
+
+// @route   PATCH /api/admin/advertisements/:id/toggle
+// @desc    Toggle advertisement active status
+// @access  Private (Admin only)
+router.patch('/advertisements/:id/toggle', async (req, res) => {
+  try {
+    const advertisement = await Advertisement.findById(req.params.id);
+    
+    if (!advertisement) {
+      return res.status(404).json({ 
+        success: false,
+        message: 'Advertisement not found' 
+      });
+    }
+
+    advertisement.isActive = !advertisement.isActive;
+    await advertisement.save();
+
+    res.json({
+      success: true,
+      message: `Advertisement ${advertisement.isActive ? 'activated' : 'deactivated'} successfully`,
+      data: advertisement
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ 
+      success: false,
+      message: 'Server error',
+      error: error.message 
     });
   }
 });
