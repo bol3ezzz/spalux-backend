@@ -19,7 +19,15 @@ const uploadMiddleware = upload.fields([
   { name: 'videos', maxCount: 2 }
 ]);
 
-router.post('/advertisements', uploadMiddleware, [
+router.post('/advertisements', (req, res, next) => {
+    uploadMiddleware(req, res, (err) => {
+        if (err) {
+            console.error(err);
+            return res.status(500).json({ success: false, message: 'Upload failed', error: err.message });
+        }
+        next();
+    });
+}, [
   body('nameAr').trim().notEmpty().withMessage('Arabic name is required'),
   body('nameEn').trim().notEmpty().withMessage('English name is required'),
   body('descriptionAr').trim().notEmpty().withMessage('Arabic description is required'),
