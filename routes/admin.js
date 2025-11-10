@@ -2,14 +2,9 @@ const express = require('express');
 const router = express.Router();
 const Advertisement = require('../models/Advertisement');
 const authMiddleware = require('../middleware/auth');
-const { uploadFields } = require('../middleware/upload');
+const upload = require('../middleware/upload');
 const { body, validationResult } = require('express-validator');
 
-// router.use(authMiddleware); 
-
-// @route   GET /api/admin/advertisements
-// @desc    Get all advertisements (including inactive)
-// @access  Private (Admin only)
 router.get('/advertisements', async (req, res) => {
   try {
     const advertisements = await Advertisement.find()
@@ -30,10 +25,12 @@ router.get('/advertisements', async (req, res) => {
   }
 });
 
-// @route   POST /api/admin/advertisements
-// @desc    Create new advertisement
-// @access  Private (Admin only)
-router.post('/advertisements', uploadFields, [
+const uploadMiddleware = upload.fields([
+    { name: 'images', maxCount: 10 },
+    { name: 'videos', maxCount: 2 }
+]);
+
+router.post('/advertisements', uploadMiddleware, [
   body('nameAr').trim().notEmpty().withMessage('Arabic name is required'),
   body('nameEn').trim().notEmpty().withMessage('English name is required'),
   body('descriptionAr').trim().notEmpty().withMessage('Arabic description is required'),
@@ -103,10 +100,7 @@ router.post('/advertisements', uploadFields, [
   }
 });
 
-// @route   PUT /api/admin/advertisements/:id
-// @desc    Update advertisement
-// @access  Private (Admin only)
-router.put('/advertisements/:id', uploadFields, async (req, res) => {
+router.put('/advertisements/:id', uploadMiddleware, async (req, res) => {
   try {
     let advertisement = await Advertisement.findById(req.params.id);
     
@@ -181,9 +175,6 @@ router.put('/advertisements/:id', uploadFields, async (req, res) => {
   }
 });
 
-// @route   DELETE /api/admin/advertisements/:id
-// @desc    Delete advertisement
-// @access  Private (Admin only)
 router.delete('/advertisements/:id', async (req, res) => {
   try {
     const advertisement = await Advertisement.findById(req.params.id);
@@ -211,9 +202,6 @@ router.delete('/advertisements/:id', async (req, res) => {
   }
 });
 
-// @route   PATCH /api/admin/advertisements/:id/toggle
-// @desc    Toggle advertisement active status
-// @access  Private (Admin only)
 router.patch('/advertisements/:id/toggle', async (req, res) => {
   try {
     const advertisement = await Advertisement.findById(req.params.id);
