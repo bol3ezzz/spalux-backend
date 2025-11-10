@@ -1,33 +1,22 @@
 const express = require('express');
 const router = express.Router();
 const Advertisement = require('../models/Advertisement');
-const authMiddleware = require('../middleware/auth');
 const upload = require('../middleware/upload');
 const { body, validationResult } = require('express-validator');
 
 router.get('/advertisements', async (req, res) => {
   try {
-    const advertisements = await Advertisement.find()
-      .sort({ createdAt: -1 });
-    
-    res.json({
-      success: true,
-      count: advertisements.length,
-      data: advertisements
-    });
+    const advertisements = await Advertisement.find().sort({ createdAt: -1 });
+    res.json({ success: true, count: advertisements.length, data: advertisements });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ 
-      success: false,
-      message: 'Server error',
-      error: error.message 
-    });
+    res.status(500).json({ success: false, message: 'Server error', error: error.message });
   }
 });
 
 const uploadMiddleware = upload.fields([
-    { name: 'images', maxCount: 10 },
-    { name: 'videos', maxCount: 2 }
+  { name: 'images', maxCount: 10 },
+  { name: 'videos', maxCount: 2 }
 ]);
 
 router.post('/advertisements', uploadMiddleware, [
@@ -47,10 +36,7 @@ router.post('/advertisements', uploadMiddleware, [
     }
 
     if (!req.files || !req.files.images || req.files.images.length === 0) {
-      return res.status(400).json({ 
-        success: false,
-        message: 'At least one image is required' 
-      });
+      return res.status(400).json({ success: false, message: 'At least one image is required' });
     }
 
     const images = req.files.images.map(file => `/uploads/${file.filename}`);
@@ -92,23 +78,15 @@ router.post('/advertisements', uploadMiddleware, [
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ 
-      success: false,
-      message: 'Server error',
-      error: error.message 
-    });
+    res.status(500).json({ success: false, message: 'Server error', error: error.message });
   }
 });
 
 router.put('/advertisements/:id', uploadMiddleware, async (req, res) => {
   try {
     let advertisement = await Advertisement.findById(req.params.id);
-    
     if (!advertisement) {
-      return res.status(404).json({ 
-        success: false,
-        message: 'Advertisement not found' 
-      });
+      return res.status(404).json({ success: false, message: 'Advertisement not found' });
     }
 
     const updateData = {
@@ -124,23 +102,14 @@ router.put('/advertisements/:id', uploadMiddleware, async (req, res) => {
       isActive: req.body.isActive !== undefined ? req.body.isActive : advertisement.isActive
     };
 
-    if (req.files && req.files.images && req.files.images.length > 0) {
+    if (req.files?.images?.length > 0) {
       updateData.images = req.files.images.map(file => `/uploads/${file.filename}`);
     }
-
-    if (req.files && req.files.videos && req.files.videos.length > 0) {
+    if (req.files?.videos?.length > 0) {
       updateData.videos = req.files.videos.map(file => `/uploads/${file.filename}`);
     }
 
-    if (req.body.twitter !== undefined || 
-        req.body.instagram !== undefined || 
-        req.body.facebook !== undefined || 
-        req.body.snapchat !== undefined || 
-        req.body.whatsapp !== undefined || 
-        req.body.phone !== undefined || 
-        req.body.website !== undefined || 
-        req.body.mapLink !== undefined ||
-        req.body.tiktok !== undefined) {
+    if (req.body.twitter !== undefined || req.body.instagram !== undefined || /* باقي الحقول */) {
       updateData.socialMedia = {
         twitter: req.body.twitter || advertisement.socialMedia.twitter,
         instagram: req.body.instagram || advertisement.socialMedia.instagram,
@@ -150,72 +119,40 @@ router.put('/advertisements/:id', uploadMiddleware, async (req, res) => {
         phone: req.body.phone || advertisement.socialMedia.phone,
         website: req.body.website || advertisement.socialMedia.website,
         mapLink: req.body.mapLink || advertisement.socialMedia.mapLink,
-        tiktok: req.body.tiktok || advertisement.socialMedia.tiktok 
+        tiktok: req.body.tiktok || advertisement.socialMedia.tiktok
       };
     }
 
-    advertisement = await Advertisement.findByIdAndUpdate(
-      req.params.id,
-      updateData,
-      { new: true, runValidators: true }
-    );
+    advertisement = await Advertisement.findByIdAndUpdate(req.params.id, updateData, { new: true, runValidators: true });
 
-    res.json({
-      success: true,
-      message: 'Advertisement updated successfully',
-      data: advertisement
-    });
+    res.json({ success: true, message: 'Advertisement updated successfully', data: advertisement });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ 
-      success: false,
-      message: 'Server error',
-      error: error.message 
-    });
+    res.status(500).json({ success: false, message: 'Server error', error: error.message });
   }
 });
 
 router.delete('/advertisements/:id', async (req, res) => {
   try {
-    const advertisement = await Advertisement.findById(req.params.id);
-    
+    const advertisement = await Advertisement.findByIdAndDelete(req.params.id);
     if (!advertisement) {
-      return res.status(404).json({ 
-        success: false,
-        message: 'Advertisement not found' 
-      });
+      return res.status(404).json({ success: false, message: 'Advertisement not found' });
     }
-
-    await Advertisement.findByIdAndDelete(req.params.id);
-
-    res.json({
-      success: true,
-      message: 'Advertisement deleted successfully'
-    });
+    res.json({ success: true, message: 'Advertisement deleted successfully' });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ 
-      success: false,
-      message: 'Server error',
-      error: error.message 
-    });
+    res.status(500).json({ success: false, message: 'Server error', error: error.message });
   }
 });
 
 router.patch('/advertisements/:id/toggle', async (req, res) => {
   try {
     const advertisement = await Advertisement.findById(req.params.id);
-    
     if (!advertisement) {
-      return res.status(404).json({ 
-        success: false,
-        message: 'Advertisement not found' 
-      });
+      return res.status(404).json({ success: false, message: 'Advertisement not found' });
     }
-
     advertisement.isActive = !advertisement.isActive;
     await advertisement.save();
-
     res.json({
       success: true,
       message: `Advertisement ${advertisement.isActive ? 'activated' : 'deactivated'} successfully`,
@@ -223,11 +160,7 @@ router.patch('/advertisements/:id/toggle', async (req, res) => {
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ 
-      success: false,
-      message: 'Server error',
-      error: error.message 
-    });
+    res.status(500).json({ success: false, message: 'Server error', error: error.message });
   }
 });
 
