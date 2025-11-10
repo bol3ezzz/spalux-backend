@@ -109,59 +109,31 @@ router.put('/advertisements/:id', uploadMiddleware, async (req, res) => {
       updateData.videos = req.files.videos.map(file => `/uploads/${file.filename}`);
     }
 
-    if (req.body.twitter !== undefined || req.body.instagram !== undefined || /* باقي الحقول */) {
+    if (
+      req.body.twitter !== undefined ||
+      req.body.instagram !== undefined ||
+      req.body.facebook !== undefined ||
+      req.body.snapchat !== undefined ||
+      req.body.whatsapp !== undefined ||
+      req.body.phone !== undefined ||
+      req.body.website !== undefined ||
+      req.body.mapLink !== undefined ||
+      req.body.tiktok !== undefined
+    ) {
       updateData.socialMedia = {
-        twitter: req.body.twitter || advertisement.socialMedia.twitter,
-        instagram: req.body.instagram || advertisement.socialMedia.instagram,
-        facebook: req.body.facebook || advertisement.socialMedia.facebook,
-        snapchat: req.body.snapchat || advertisement.socialMedia.snapchat,
-        whatsapp: req.body.whatsapp || advertisement.socialMedia.whatsapp,
-        phone: req.body.phone || advertisement.socialMedia.phone,
-        website: req.body.website || advertisement.socialMedia.website,
-        mapLink: req.body.mapLink || advertisement.socialMedia.mapLink,
-        tiktok: req.body.tiktok || advertisement.socialMedia.tiktok
+        twitter: req.body.twitter ?? advertisement.socialMedia.twitter,
+        instagram: req.body.instagram ?? advertisement.socialMedia.instagram,
+        facebook: req.body.facebook ?? advertisement.socialMedia.facebook,
+        snapchat: req.body.snapchat ?? advertisement.socialMedia.snapchat,
+        whatsapp: req.body.whatsapp ?? advertisement.socialMedia.whatsapp,
+        phone: req.body.phone ?? advertisement.socialMedia.phone,
+        website: req.body.website ?? advertisement.socialMedia.website,
+        mapLink: req.body.mapLink ?? advertisement.socialMedia.mapLink,
+        tiktok: req.body.tiktok ?? advertisement.socialMedia.tiktok
       };
     }
 
     advertisement = await Advertisement.findByIdAndUpdate(req.params.id, updateData, { new: true, runValidators: true });
 
     res.json({ success: true, message: 'Advertisement updated successfully', data: advertisement });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ success: false, message: 'Server error', error: error.message });
-  }
-});
-
-router.delete('/advertisements/:id', async (req, res) => {
-  try {
-    const advertisement = await Advertisement.findByIdAndDelete(req.params.id);
-    if (!advertisement) {
-      return res.status(404).json({ success: false, message: 'Advertisement not found' });
-    }
-    res.json({ success: true, message: 'Advertisement deleted successfully' });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ success: false, message: 'Server error', error: error.message });
-  }
-});
-
-router.patch('/advertisements/:id/toggle', async (req, res) => {
-  try {
-    const advertisement = await Advertisement.findById(req.params.id);
-    if (!advertisement) {
-      return res.status(404).json({ success: false, message: 'Advertisement not found' });
-    }
-    advertisement.isActive = !advertisement.isActive;
-    await advertisement.save();
-    res.json({
-      success: true,
-      message: `Advertisement ${advertisement.isActive ? 'activated' : 'deactivated'} successfully`,
-      data: advertisement
-    });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ success: false, message: 'Server error', error: error.message });
-  }
-});
-
-module.exports = router;
+  } catch (
