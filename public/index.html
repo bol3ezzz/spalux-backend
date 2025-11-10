@@ -272,7 +272,7 @@
 
         async function fetchAdsAndLoadStats() {
             try {
-                const res = await fetch(`${API_URL}/admin/advertisements`);
+                const res = await fetch(`${API_URL}/advertisements`);
                 const data = await res.json();
                 
                 if (data.success && data.data.length > 0) {

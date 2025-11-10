@@ -1,8 +1,43 @@
 const express = require('express');
 const router = express.Router();
+const path = require('path');
 const Advertisement = require('../models/Advertisement');
 const upload = require('../middleware/upload');
 const { body, validationResult } = require('express-validator');
+
+const PROJECT_ROOT = path.join(__dirname, '..');
+
+const resolveStoredFilePath = (file) => {
+  if (!file) return null;
+  if (file.location) return file.location;
+
+  const absolutePath = file.path
+    || (file.destination && file.filename
+      ? path.join(file.destination, file.filename)
+      : null);
+
+  if (!absolutePath) return null;
+
+  const relativePath = path.relative(PROJECT_ROOT, absolutePath);
+  return `/${relativePath.replace(/\\/g, '/')}`;
+};
+
+const mapStoredFiles = (files = []) =>
+  files
+    .map(resolveStoredFilePath)
+    .filter(Boolean);
+
+const parseJsonArray = (value) => {
+  if (!value) return [];
+  if (Array.isArray(value)) return value;
+
+  try {
+    const parsed = JSON.parse(value);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (error) {
+    return [];
+  }
+};
 
 router.get('/advertisements', async (req, res) => {
   try {
@@ -42,15 +77,18 @@ router.post('/advertisements', upload.fields([
       return res.status(400).json({ success: false, errors: errors.array() });
     }
 
-    if (!req.files || !req.files.images || req.files.images.length === 0) {
-      return res.status(400).json({ 
+    const uploadedImages = (req.files && req.files.images) ? req.files.images : [];
+    const images = mapStoredFiles(uploadedImages);
+    
+    if (!images.length) {
+      return res.status(400).json({
         success: false,
-        message: 'At least one image is required' 
+        message: 'At least one image is required'
       });
     }
 
-    const images = req.files.images.map(file => file.location || file.path);
-    const videos = req.files.videos ? req.files.videos.map(file => file.location || file.path) : [];
+    const uploadedVideos = (req.files && req.files.videos) ? req.files.videos : [];
+    const videos = mapStoredFiles(uploadedVideos);
 
     const advertisement = new Advertisement({
       nameAr: req.body.nameAr,
@@ -80,7 +118,7 @@ router.post('/advertisements', upload.fields([
 
     await advertisement.save();
 
-    res.json({
+    res.status(201).json({
       success: true,
       message: 'Advertisement created successfully',
       data: advertisement.toObject()
@@ -88,8 +126,8 @@ router.post('/advertisements', upload.fields([
   } catch (error) {
     console.error(error);
     res.status(500).json({ 
-      success: false,
-      message: error.message 
+      success: false, 
+      message: 'Server error' 
     });
   }
 });
@@ -116,27 +154,19 @@ router.put('/advertisements/:id', upload.fields([
       displayOrder: req.body.displayOrder !== undefined ? req.body.displayOrder : advertisement.displayOrder,
     };
 
-    if (req.files && req.files.images) {
-      updateData.images = req.files.images.map(file => file.location || file.path);
-    }
-    if (req.files && req.files.videos) {
-      updateData.videos = req.files.videos.map(file => file.location || file.path);
-    }
+    const newImages = mapStoredFiles((req.files && req.files.images) ? req.files.images : []);
+    const newVideos = mapStoredFiles((req.files && req.files.videos) ? req.files.videos : []);
 
-    const existingImages = req.body.existingImages ? JSON.parse(req.body.existingImages) : [];
-    const existingVideos = req.body.existingVideos ? JSON.parse(req.body.existingVideos) : [];
+    const existingImages = parseJsonArray(req.body.existingImages);
+    const existingVideos = parseJsonArray(req.body.existingVideos);
 
-    if (req.files && req.files.images) {
-      updateData.images = [...existingImages, ...updateData.images];
-    } else {
-      updateData.images = existingImages;
-    }
+    updateData.images = newImages.length
+      ? [...existingImages, ...newImages]
+      : existingImages;
 
-    if (req.files && req.files.videos) {
-      updateData.videos = [...existingVideos, ...updateData.videos];
-    } else {
-      updateData.videos = existingVideos;
-    }
+    updateData.videos = newVideos.length
+      ? [...existingVideos, ...newVideos]
+      : existingVideos;
 
     const socialMediaFields = ['twitter', 'instagram', 'facebook', 'snapchat', 'whatsapp', 'phone', 'website', 'mapLink', 'tiktok'];
     updateData.socialMedia = { ...advertisement.socialMedia };
@@ -162,33 +192,7 @@ router.put('/advertisements/:id', upload.fields([
     console.error(error);
     res.status(500).json({ 
       success: false,
-      message: error.message 
-    });
-  }
-});
-
-router.delete('/advertisements/:id', async (req, res) => {
-  try {
-    const advertisement = await Advertisement.findById(req.params.id);
-    
-    if (!advertisement) {
-      return res.status(404).json({ 
-        success: false,
-        message: 'Advertisement not found' 
-      });
-    }
-
-    await Advertisement.findByIdAndDelete(req.params.id);
-
-    res.json({
-      success: true,
-      message: 'Advertisement deleted successfully'
-    });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ 
-      success: false,
-      message: error.message 
+      message: 'Server error'
     });
   }
 });
@@ -196,12 +200,8 @@ router.delete('/advertisements/:id', async (req, res) => {
 router.patch('/advertisements/:id/toggle', async (req, res) => {
   try {
     const advertisement = await Advertisement.findById(req.params.id);
-    
     if (!advertisement) {
-      return res.status(404).json({ 
-        success: false,
-        message: 'Advertisement not found' 
-      });
+      return res.status(404).json({ success: false, message: 'Advertisement not found' });
     }
 
     advertisement.isActive = !advertisement.isActive;
@@ -215,8 +215,28 @@ router.patch('/advertisements/:id/toggle', async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ 
-      success: false,
-      message: error.message 
+      success: false, 
+      message: 'Server error' 
+    });
+  }
+});
+
+router.delete('/advertisements/:id', async (req, res) => {
+  try {
+    const advertisement = await Advertisement.findByIdAndDelete(req.params.id);
+    if (!advertisement) {
+      return res.status(404).json({ success: false, message: 'Advertisement not found' });
+    }
+
+    res.json({
+      success: true,
+      message: 'Advertisement deleted successfully'
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Server error' 
     });
   }
 });
