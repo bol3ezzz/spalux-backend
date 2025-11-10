@@ -136,4 +136,42 @@ router.put('/advertisements/:id', uploadMiddleware, async (req, res) => {
     advertisement = await Advertisement.findByIdAndUpdate(req.params.id, updateData, { new: true, runValidators: true });
 
     res.json({ success: true, message: 'Advertisement updated successfully', data: advertisement });
-  } catch (
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: 'Server error', error: error.message });
+  }
+});
+
+router.delete('/advertisements/:id', async (req, res) => {
+  try {
+    const advertisement = await Advertisement.findByIdAndDelete(req.params.id);
+    if (!advertisement) {
+      return res.status(404).json({ success: false, message: 'Advertisement not found' });
+    }
+ )   res.json({ success: true, message: 'Advertisement deleted successfully' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: 'Server error', error: error.message });
+  }
+});
+
+router.patch('/advertisements/:id/toggle', async (req, res) => {
+  try {
+    const advertisement = await Advertisement.findById(req.params.id);
+    if (!advertisement) {
+      return res.status(404).json({ success: false, message: 'Advertisement not found' });
+    }
+    advertisement.isActive = !advertisement.isActive;
+    await advertisement.save();
+    res.json({
+      success: true,
+      message: `Advertisement ${advertisement.isActive ? 'activated' : 'deactivated'} successfully`,
+      data: advertisement
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: 'Server error', error: error.message });
+  }
+});
+
+module.exports = router;
