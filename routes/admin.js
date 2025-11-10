@@ -5,8 +5,7 @@ const authMiddleware = require('../middleware/auth');
 const { uploadFields } = require('../middleware/upload');
 const { body, validationResult } = require('express-validator');
 
-// Apply auth middleware to all routes
-// router.use(authMiddleware); // DISABLED - No authentication required
+// router.use(authMiddleware); 
 
 // @route   GET /api/admin/advertisements
 // @desc    Get all advertisements (including inactive)
@@ -50,7 +49,6 @@ router.post('/advertisements', uploadFields, [
       return res.status(400).json({ success: false, errors: errors.array() });
     }
 
-    // Check if files were uploaded
     if (!req.files || !req.files.images || req.files.images.length === 0) {
       return res.status(400).json({ 
         success: false,
@@ -58,13 +56,9 @@ router.post('/advertisements', uploadFields, [
       });
     }
 
-    // Prepare image URLs
     const images = req.files.images.map(file => `/uploads/${file.filename}`);
-    
-    // Prepare video URLs (if any)
     const videos = req.files.videos ? req.files.videos.map(file => `/uploads/${file.filename}`) : [];
 
-    // Parse social media data
     const socialMedia = {
       twitter: req.body.twitter || '',
       instagram: req.body.instagram || '',
@@ -73,10 +67,10 @@ router.post('/advertisements', uploadFields, [
       whatsapp: req.body.whatsapp || '',
       phone: req.body.phone || '',
       website: req.body.website || '',
-      mapLink: req.body.mapLink || ''
+      mapLink: req.body.mapLink || '',
+      tiktok: req.body.tiktok || ''
     };
 
-    // Create advertisement
     const advertisement = new Advertisement({
       nameAr: req.body.nameAr,
       nameEn: req.body.nameEn,
@@ -123,7 +117,6 @@ router.put('/advertisements/:id', uploadFields, async (req, res) => {
       });
     }
 
-    // Prepare update data
     const updateData = {
       nameAr: req.body.nameAr || advertisement.nameAr,
       nameEn: req.body.nameEn || advertisement.nameEn,
@@ -137,17 +130,14 @@ router.put('/advertisements/:id', uploadFields, async (req, res) => {
       isActive: req.body.isActive !== undefined ? req.body.isActive : advertisement.isActive
     };
 
-    // Update images if new ones uploaded
     if (req.files && req.files.images && req.files.images.length > 0) {
       updateData.images = req.files.images.map(file => `/uploads/${file.filename}`);
     }
 
-    // Update videos if new ones uploaded
     if (req.files && req.files.videos && req.files.videos.length > 0) {
       updateData.videos = req.files.videos.map(file => `/uploads/${file.filename}`);
     }
 
-    // Update social media
     if (req.body.twitter !== undefined || 
         req.body.instagram !== undefined || 
         req.body.facebook !== undefined || 
@@ -155,7 +145,8 @@ router.put('/advertisements/:id', uploadFields, async (req, res) => {
         req.body.whatsapp !== undefined || 
         req.body.phone !== undefined || 
         req.body.website !== undefined || 
-        req.body.mapLink !== undefined) {
+        req.body.mapLink !== undefined ||
+        req.body.tiktok !== undefined) {
       updateData.socialMedia = {
         twitter: req.body.twitter || advertisement.socialMedia.twitter,
         instagram: req.body.instagram || advertisement.socialMedia.instagram,
@@ -164,7 +155,8 @@ router.put('/advertisements/:id', uploadFields, async (req, res) => {
         whatsapp: req.body.whatsapp || advertisement.socialMedia.whatsapp,
         phone: req.body.phone || advertisement.socialMedia.phone,
         website: req.body.website || advertisement.socialMedia.website,
-        mapLink: req.body.mapLink || advertisement.socialMedia.mapLink
+        mapLink: req.body.mapLink || advertisement.socialMedia.mapLink,
+        tiktok: req.body.tiktok || advertisement.socialMedia.tiktok 
       };
     }
 
