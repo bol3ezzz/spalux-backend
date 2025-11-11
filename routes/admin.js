@@ -47,8 +47,8 @@ router.post('/advertisements', (req, res, next) => {
       return res.status(400).json({ success: false, message: 'At least one image is required' });
     }
 
-    const images = req.files.images.map(file => `/uploads/${file.filename}`);
-    const videos = req.files.videos ? req.files.videos.map(file => `/uploads/${file.filename}`) : [];
+    const images = req.files.images.map(file => file.path);
+    const videos = req.files.videos ? req.files.videos.map(file => file.path) : [];
 
     const socialMedia = {
       twitter: req.body.twitter || '',
@@ -111,10 +111,10 @@ router.put('/advertisements/:id', uploadMiddleware, async (req, res) => {
     };
 
     if (req.files?.images?.length > 0) {
-      updateData.images = req.files.images.map(file => `/uploads/${file.filename}`);
+      updateData.images = req.files.images.map(file => file.path);
     }
     if (req.files?.videos?.length > 0) {
-      updateData.videos = req.files.videos.map(file => `/uploads/${file.filename}`);
+      updateData.videos = req.files.videos.map(file => file.path);
     }
 
     if (
