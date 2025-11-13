@@ -37,23 +37,33 @@
         .loading { text-align: center; padding: 20px; color: #666; }
         .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 30px; }
         .stat-card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); text-align: center; }
-        .stat-card h3 { font-size: 32px; color: #90EE90; margin-bottom: 5px; }
-        .stat-card p { color: #666; }
-        .file-preview { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
-        .file-preview img { width: 100px; height: 100px; object-fit: cover; border-radius: 5px; border: 2px solid #ddd; }
-        .badge { display: inline-block; padding: 4px 8px; border-radius: 3px; font-size: 12px; font-weight: bold; }
-        .badge.active { background: #d4edda; color: #155724; }
-        .badge.inactive { background: #f8d7da; color: #721c24; }
+        .stat-card h3 { font-size: 24px; margin-bottom: 5px; color: #90EE90; }
+        .stat-card p { color: #666; font-size: 14px; }
+        .image-preview { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
+        .preview-img { width: 100px; height: 100px; object-fit: cover; border-radius: 5px; border: 2px solid #ddd; }
+        .preview-video { width: 200px; height: 120px; border-radius: 5px; border: 2px solid #ddd; }
+        .remove-file { position: absolute; top: -5px; right: -5px; background: #ff4444; color: white; border: none; border-radius: 50%; width: 20px; height: 20px; font-size: 12px; cursor: pointer; }
+        .file-item { position: relative; }
+        .toggle-switch { position: relative; display: inline-block; width: 50px; height: 26px; }
+        .toggle-switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px; }
+        .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: #90EE90; }
+        input:checked + .slider:before { transform: translateX(24px); }
+        .social-inputs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
+        @media (max-width: 768px) {
+            .form-row, .social-inputs { grid-template-columns: 1fr; }
+            .stats { grid-template-columns: 1fr; }
+        }
     </style>
 </head>
 <body>
     <div class="header">
-        <h1>🌸 SpaLux - لوحة إدخال الإعلانات 🌸</h1>
-        <p>إدارة إعلانات السبا والصالونات ومراكز التجميل</p>
+        <h1>لوحة إدارة الإعلانات - SpaLux</h1>
     </div>
 
     <div class="container">
-        <div id="message"></div>
+        <div id="message" style="display: none;"></div>
 
         <div class="stats">
             <div class="stat-card">
@@ -65,57 +75,57 @@
                 <p>الإعلانات النشطة</p>
             </div>
             <div class="stat-card">
-                <h3 id="menAds">0</h3>
-                <p>إعلانات الرجال</p>
+                <h3 id="inactiveAds">0</h3>
+                <p>الإعلانات الموقوفة</p>
             </div>
             <div class="stat-card">
-                <h3 id="womenAds">0</h3>
-                <p>إعلانات السيدات</p>
+                <h3 id="expiringSoon">0</h3>
+                <p>تنتهي قريباً</p>
             </div>
         </div>
 
         <div class="form-card">
-            <h2>➕ إضافة إعلان جديد</h2>
-            <form id="adForm" enctype="multipart/form-data">
+            <h2>إضافة إعلان جديد</h2>
+            <form id="adForm">
                 <div class="form-row">
                     <div class="form-group">
-                        <label>الاسم بالعربية *</label>
-                        <input type="text" name="nameAr" required placeholder="مثال: سبا الفخامة">
+                        <label>الاسم (عربي) *</label>
+                        <input type="text" name="nameAr" required>
                     </div>
                     <div class="form-group">
-                        <label>الاسم بالإنجليزية *</label>
-                        <input type="text" name="nameEn" required placeholder="Example: Luxury Spa">
+                        <label>الاسم (إنجليزي) *</label>
+                        <input type="text" name="nameEn" required>
                     </div>
                 </div>
 
                 <div class="form-row">
                     <div class="form-group">
-                        <label>الوصف بالعربية *</label>
-                        <textarea name="descriptionAr" required placeholder="اكتب وصف تفصيلي للخدمات..."></textarea>
+                        <label>الوصف (عربي) *</label>
+                        <textarea name="descriptionAr" required></textarea>
                     </div>
                     <div class="form-group">
-                        <label>الوصف بالإنجليزية *</label>
-                        <textarea name="descriptionEn" required placeholder="Write detailed description..."></textarea>
+                        <label>الوصف (إنجليزي) *</label>
+                        <textarea name="descriptionEn" required></textarea>
                     </div>
                 </div>
 
                 <div class="form-row">
                     <div class="form-group">
-                        <label>الفئة المستهدفة *</label>
+                        <label>الفئة *</label>
                         <select name="category" required>
                             <option value="">اختر الفئة</option>
                             <option value="men">رجال</option>
-                            <option value="women">سيدات</option>
+                            <option value="women">نساء</option>
                             <option value="children">أطفال</option>
                         </select>
                     </div>
                     <div class="form-group">
-                        <label>التصنيف *</label>
+                        <label>التصنيف الفرعي *</label>
                         <select name="subCategory" required>
                             <option value="">اختر التصنيف</option>
                             <option value="spa">سبا</option>
                             <option value="cupping">حجامة</option>
-                            <option value="beauty_clinic">عيادات تجميل</option>
+                            <option value="beauty_clinic">عيادة تجميل</option>
                             <option value="mens_salon">صالون رجالي</option>
                             <option value="womens_salon">صالون نسائي</option>
                             <option value="home_services">خدمات منزلية</option>
@@ -130,11 +140,11 @@
                         <select name="governorate" required>
                             <option value="">اختر المحافظة</option>
                             <option value="capital">العاصمة</option>
-                            <option value="ahmadi">الأحمدي</option>
-                            <option value="farwaniya">الفروانية</option>
                             <option value="hawalli">حولي</option>
+                            <option value="farwaniya">الفروانية</option>
+                            <option value="mubarak_alkabeer">مبارك الكبير</option>
+                            <option value="ahmadi">الأحمدي</option>
                             <option value="jahra">الجهراء</option>
-                            <option value="mubarak_al_kabeer">مبارك الكبير</option>
                         </select>
                     </div>
                     <div class="form-group">
@@ -144,59 +154,34 @@
                 </div>
 
                 <div class="form-group full">
-                    <label>الصور (حتى 10 صور) *</label>
-                    <input type="file" name="images" multiple accept="image/*" required id="imageInput">
-                    <div id="imagePreview" class="file-preview"></div>
+                    <label>ترتيب العرض (اختياري)</label>
+                    <input type="number" name="displayOrder" min="0" placeholder="كلما زاد الرقم كلما ظهر أولاً">
                 </div>
 
                 <div class="form-group full">
-                    <label>فيديوهات (حتى 2 فيديو)</label>
-                    <input type="file" name="videos" multiple accept="video/*" id="videoInput">
+                    <label>الصور (حد أقصى 10) *</label>
+                    <input type="file" name="images" accept="image/*" multiple required>
+                    <div id="imagePreview" class="image-preview"></div>
                 </div>
 
-                <h3 style="margin: 20px 0;">📱 روابط التواصل الاجتماعي</h3>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>فيسبوك</label>
-                        <input type="url" name="facebook" placeholder="https://facebook.com/...">
-                    </div>
-                    <div class="form-group">
-                        <label>إنستغرام</label>
-                        <input type="url" name="instagram" placeholder="https://instagram.com/...">
-                    </div>
+                <div class="form-group full">
+                    <label>الفيديوهات (حد أقصى 2)</label>
+                    <input type="file" name="videos" accept="video/*" multiple>
+                    <div id="videoPreview" class="image-preview"></div>
                 </div>
 
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>تويتر</label>
-                        <input type="url" name="twitter" placeholder="https://twitter.com/...">
-                    </div>
-                    <div class="form-group">
-                        <label>سناب شات</label>
-                        <input type="text" name="snapchat" placeholder="اسم المستخدم">
-                    </div>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>واتساب</label>
-                        <input type="tel" name="whatsapp" placeholder="+965...">
-                    </div>
-                    <div class="form-group">
-                        <label>رقم الهاتف</label>
-                        <input type="tel" name="phone" placeholder="+965...">
-                    </div>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>الموقع الإلكتروني</label>
-                        <input type="url" name="website" placeholder="https://example.com">
-                    </div>
-                    <div class="form-group">
-                        <label>رابط الموقع على الخريطة</label>
-                        <input type="url" name="mapLink" placeholder="https://maps.google.com/...">
+                <div class="form-group full">
+                    <h3>روابط التواصل الاجتماعي (اختياري)</h3>
+                    <div class="social-inputs">
+                        <input type="url" name="facebook" placeholder="فيسبوك">
+                        <input type="url" name="instagram" placeholder="إنستغرام">
+                        <input type="url" name="twitter" placeholder="تويتر">
+                        <input type="url" name="snapchat" placeholder="سناب شات">
+                        <input type="url" name="tiktok" placeholder="تيك توك">
+                        <input type="url" name="whatsapp" placeholder="واتساب (رقم الهاتف)">
+                        <input type="tel" name="phone" placeholder="رقم الهاتف">
+                        <input type="url" name="website" placeholder="الموقع الإلكتروني">
+                        <input type="url" name="mapLink" placeholder="رابط الخريطة">
                     </div>
                 </div>
 
@@ -205,53 +190,65 @@
         </div>
 
         <div class="ads-list">
-            <h2>📋 الإعلانات الحالية</h2>
-            <div id="adsList" class="loading">جاري تحميل الإعلانات...</div>
+            <h2>الإعلانات الحالية</h2>
+            <div id="adsContainer">
+                <div class="loading">جاري تحميل الإعلانات...</div>
+            </div>
         </div>
     </div>
 
     <script>
-        const API_URL = 'https://spalux-backend-hsl4.onrender.com/api';
+        const API_URL = 'http://localhost:3000/api/admin';
 
-        document.getElementById('imageInput').addEventListener('change', function(e) {
-            const preview = document.getElementById('imagePreview');
-            preview.innerHTML = '';
-            Array.from(e.target.files).forEach(file => {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    const img = document.createElement('img');
-                    img.src = e.target.result;
-                    preview.appendChild(img);
-                };
-                reader.readAsDataURL(file);
-            });
+        document.getElementById('adForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'جاري الإضافة...';
+
+            const formData = new FormData(e.target);
+
+            try {
+                const res = await fetch(`${API_URL}/advertisements`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await res.json();
+                
+                if (data.success) {
+                    showMessage('تم إضافة الإعلان بنجاح!', 'success');
+                    e.target.reset();
+                    document.getElementById('imagePreview').innerHTML = '';
+                    document.getElementById('videoPreview').innerHTML = '';
+                    loadAds();
+                } else {
+                    showMessage('خطأ: ' + (data.message || 'فشل في إضافة الإعلان'), 'error');
+                }
+            } catch (error) {
+                showMessage('خطأ في الاتصال بالسيرفر. تأكد من تشغيل Backend', 'error');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'إضافة الإعلان';
+            }
         });
 
         async function loadAds() {
+            const container = document.getElementById('adsContainer');
+            container.innerHTML = '<div class="loading">جاري تحميل الإعلانات...</div>';
+
             try {
                 const res = await fetch(`${API_URL}/advertisements`);
                 const data = await res.json();
-                const list = document.getElementById('adsList');
-                
-                if (data.success && data.data.length > 0) {
-                    document.getElementById('totalAds').textContent = data.data.length;
-                    document.getElementById('activeAds').textContent = data.data.filter(ad => ad.isActive).length;
-                    document.getElementById('menAds').textContent = data.data.filter(ad => ad.category === 'men').length;
-                    document.getElementById('womenAds').textContent = data.data.filter(ad => ad.category === 'women').length;
 
-                    list.innerHTML = data.data.map(ad => `
+                if (data.success && data.data.length > 0) {
+                    container.innerHTML = data.data.map(ad => `
                         <div class="ad-item">
                             <div class="ad-info">
-                                <h3>${ad.nameAr} - ${ad.nameEn}</h3>
-                                <p>
-                                    <span class="badge ${ad.isActive ? 'active' : 'inactive'}">
-                                        ${ad.isActive ? 'نشط' : 'غير نشط'}
-                                    </span>
-                                    ${ad.category} | ${ad.subCategory} | ${ad.governorate}
-                                </p>
-                                <p style="margin-top: 5px; font-size: 12px;">
-                                    ${ad.images.length} صور | ${ad.videos.length} فيديو | 
-                                    انتهاء: ${new Date(ad.subscriptionEndDate).toLocaleDateString('ar-EG')}
+                                <h3>${ad.nameAr} - ${ad.subCategory.replace('_', ' ')}</h3>
+                                <p>${ad.category} | ${ad.governorate} | ${new Date(ad.subscriptionEndDate).toLocaleDateString('ar-KW')}</p>
+                                <p style="color: ${ad.isActive ? 'green' : 'red'}; font-weight: bold;">
+                                    ${ad.isActive ? 'نشط' : 'موقوف'}
                                 </p>
                             </div>
                             <div class="ad-actions">
@@ -262,88 +259,72 @@
                             </div>
                         </div>
                     `).join('');
+                    
+                    updateStats(data.data);
                 } else {
-                    list.innerHTML = '<p style="text-align: center; padding: 40px; color: #999;">لا توجد إعلانات حالياً</p>';
-                    document.getElementById('totalAds').textContent = '0';
-                    document.getElementById('activeAds').textContent = '0';
-                    document.getElementById('menAds').textContent = '0';
-                    document.getElementById('womenAds').textContent = '0';
+                    container.innerHTML = '<p style="text-align: center; color: #666; padding: 40px;">لا توجد إعلانات حالياً</p>';
+                    updateStats([]);
                 }
             } catch (error) {
-                console.error(error);
-                document.getElementById('adsList').innerHTML = '<p style="text-align: center; padding: 40px; color: #ff0000;">خطأ في تحميل الإعلانات. تأكد من تشغيل Backend</p>';
+                container.innerHTML = '<p class="error">فشل في تحميل الإعلانات. تأكد من تشغيل السيرفر.</p>';
+                updateStats([]);
             }
         }
 
-        document.getElementById('adForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const formData = new FormData(e.target);
-            const submitBtn = document.getElementById('submitBtn');
-            
-            submitBtn.disabled = true;
-            submitBtn.textContent = 'جاري الإضافة...';
-            
-            try {
-                const res = await fetch(`${API_URL}/admin/advertisements`, {
-                    method: 'POST',
-                    body: formData
-                });
-                
-                const data = await res.json();
-                
-                if (data.success) {
-                    showMessage('✅ تم إضافة الإعلان بنجاح!', 'success');
-                    e.target.reset();
-                    document.getElementById('imagePreview').innerHTML = '';
-                    loadAds();
-                } else {
-                    showMessage('❌ خطأ: ' + (data.message || 'فشل في إضافة الإعلان'), 'error');
-                }
-            } catch (error) {
-                showMessage('❌ خطأ في الاتصال بالسيرفر. تأكد من تشغيل Backend', 'error');
-            } finally {
-                submitBtn.disabled = false;
-                submitBtn.textContent = 'إضافة الإعلان';
-            }
-        });
+        function updateStats(ads) {
+            const total = ads.length;
+            const active = ads.filter(ad => ad.isActive).length;
+            const inactive = total - active;
+            const today = new Date();
+            const expiringSoon = ads.filter(ad => {
+                const end = new Date(ad.subscriptionEndDate);
+                const diff = (end - today) / (1000 * 60 * 60 * 24);
+                return diff <= 7 && diff >= 0;
+            }).length;
+
+            document.getElementById('totalAds').textContent = total;
+            document.getElementById('activeAds').textContent = active;
+            document.getElementById('inactiveAds').textContent = inactive;
+            document.getElementById('expiringSoon').textContent = expiringSoon;
+        }
 
         async function toggleAd(id, currentStatus) {
             try {
-                const res = await fetch(`${API_URL}/admin/advertisements/${id}/toggle`, {
+                const res = await fetch(`${API_URL}/advertisements/${id}/toggle`, {
                     method: 'PATCH'
                 });
                 
                 const data = await res.json();
                 
                 if (data.success) {
-                    showMessage(`✅ ${currentStatus ? 'تم إيقاف' : 'تم تفعيل'} الإعلان بنجاح!`, 'success');
+                    showMessage(`${currentStatus ? 'تم إيقاف' : 'تم تفعيل'} الإعلان بنجاح!`, 'success');
                     loadAds();
                 } else {
-                    showMessage('❌ خطأ: ' + data.message, 'error');
+                    showMessage('خطأ: ' + data.message, 'error');
                 }
             } catch (error) {
-                showMessage('❌ خطأ في الاتصال بالسيرفر', 'error');
+                showMessage('خطأ في الاتصال بالسيرفر', 'error');
             }
         }
 
         async function deleteAd(id) {
-            if (!confirm('⚠️ هل أنت متأكد من حذف هذا الإعلان؟ لا يمكن التراجع عن هذا الإجراء.')) return;
+            if (!confirm('هل أنت متأكد من حذف هذا الإعلان؟ لا يمكن التراجع عن هذا الإجراء.')) return;
             
             try {
-                const res = await fetch(`${API_URL}/admin/advertisements/${id}`, {
+                const res = await fetch(`${API_URL}/advertisements/${id}`, {
                     method: 'DELETE'
                 });
                 
                 const data = await res.json();
                 
                 if (data.success) {
-                    showMessage('✅ تم حذف الإعلان بنجاح!', 'success');
+                    showMessage('تم حذف الإعلان بنجاح!', 'success');
                     loadAds();
                 } else {
-                    showMessage('❌ خطأ: ' + data.message, 'error');
+                    showMessage('خطأ: ' + data.message, 'error');
                 }
             } catch (error) {
-                showMessage('❌ خطأ في الاتصال بالسيرفر', 'error');
+                showMessage('خطأ في الاتصال بالسيرفر', 'error');
             }
         }
 
@@ -362,6 +343,53 @@
         defaultDate.setDate(defaultDate.getDate() + 30);
         dateInput.value = defaultDate.toISOString().split('T')[0];
         dateInput.min = new Date().toISOString().split('T')[0];
+
+        document.querySelector('input[name="images"]').addEventListener('change', previewFiles);
+        document.querySelector('input[name="videos"]').addEventListener('change', previewFiles);
+
+        function previewFiles(e) {
+            const files = e.target.files;
+            const previewId = e.target.name === 'images' ? 'imagePreview' : 'videoPreview';
+            const preview = document.getElementById(previewId);
+            preview.innerHTML = '';
+
+            Array.from(files).forEach((file, index) => {
+                const reader = new FileReader();
+                reader.onload = (ev) => {
+                    const div = document.createElement('div');
+                    div.className = 'file-item';
+                    
+                    if (file.type.startsWith('image/')) {
+                        const img = document.createElement('img');
+                        img.src = ev.target.result;
+                        img.className = 'preview-img';
+                        div.appendChild(img);
+                    } else if (file.type.startsWith('video/')) {
+                        const video = document.createElement('video');
+                        video.src = ev.target.result;
+                        video.className = 'preview-video';
+                        video.muted = true;
+                        video.controls = true;
+                        div.appendChild(video);
+                    }
+
+                    const removeBtn = document.createElement('button');
+                    removeBtn.className = 'remove-file';
+                    removeBtn.textContent = '×';
+                    removeBtn.onclick = () => {
+                        const dt = new DataTransfer();
+                        Array.from(e.target.files).forEach((f, i) => {
+                            if (i !== index) dt.items.add(f);
+                        });
+                        e.target.files = dt.files;
+                        previewFiles(e);
+                    };
+                    div.appendChild(removeBtn);
+                    preview.appendChild(div);
+                };
+                reader.readAsDataURL(file);
+            });
+        }
 
         loadAds();
     </script>

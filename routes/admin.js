@@ -4,7 +4,7 @@ const Advertisement = require('../models/Advertisement');
 const upload = require('../middleware/upload');
 const { body, validationResult } = require('express-validator');
 
-router.get('/admin/advertisements', async (req, res) => {
+router.get('/advertisements', async (req, res) => {
   try {
     const advertisements = await Advertisement.find().sort({ createdAt: -1 });
     res.json({ success: true, count: advertisements.length, data: advertisements });
@@ -19,7 +19,7 @@ const uploadMiddleware = upload.fields([
   { name: 'videos', maxCount: 2 }
 ]);
 
-router.post('/admin/advertisements', (req, res, next) => {
+router.post('/advertisements', (req, res, next) => {
     uploadMiddleware(req, res, (err) => {
         if (err) {
             console.error(err);
@@ -90,7 +90,7 @@ router.post('/admin/advertisements', (req, res, next) => {
   }
 });
 
-router.put('/admin/advertisements/:id', uploadMiddleware, async (req, res) => {
+router.put('/advertisements/:id', uploadMiddleware, async (req, res) => {
   try {
     let advertisement = await Advertisement.findById(req.params.id);
     if (!advertisement) {
@@ -150,7 +150,7 @@ router.put('/admin/advertisements/:id', uploadMiddleware, async (req, res) => {
   }
 });
 
-router.delete('/admin/advertisements/:id', async (req, res) => {
+router.delete('/advertisements/:id', async (req, res) => {
   try {
     const advertisement = await Advertisement.findByIdAndDelete(req.params.id);
     if (!advertisement) {
@@ -163,7 +163,7 @@ router.delete('/admin/advertisements/:id', async (req, res) => {
   }
 });
 
-router.patch('/admin/advertisements/:id/toggle', async (req, res) => {
+router.patch('/advertisements/:id/toggle', async (req, res) => {
   try {
     const advertisement = await Advertisement.findById(req.params.id);
     if (!advertisement) {

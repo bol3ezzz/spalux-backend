@@ -14,10 +14,13 @@ let storage;
 if (hasCloudinaryConfig) {
   storage = new CloudinaryStorage({
     cloudinary,
-    params: {
-      folder: 'spalux',
-      allowed_formats: ['jpg', 'jpeg', 'png', 'webp', 'mp4', 'mov'],
-      resource_type: 'auto'
+    params: async (req, file) => {
+      const folder = file.mimetype.startsWith('video/') ? 'videos' : 'images';
+      return {
+        folder: `spalux/${folder}`,
+        resource_type: file.mimetype.startsWith('video/') ? 'video' : 'image',
+        public_id: `${Date.now()}-${file.originalname.split('.')[0]}`
+      };
     }
   });
 } else {
